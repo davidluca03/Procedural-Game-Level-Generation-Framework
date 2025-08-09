@@ -22,20 +22,6 @@ public class chunkScript : MonoBehaviour
     public Material material;
     private Renderer objectRenderer;
 
-    public void updateMeshVertices()
-    {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter != null)
-        {
-            meshFilter.mesh.Clear();
-            meshFilter.mesh.vertices = createVertices(chunkSize, chunkScale);
-            meshFilter.mesh.triangles = createTriangles(chunkSize);
-            meshFilter.mesh.uv = createUVs(chunkSize);
-
-            meshFilter.mesh.RecalculateNormals();
-            meshFilter.mesh.RecalculateBounds();
-        }
-    }
     public void Awake()
     {
         if (material == null)
