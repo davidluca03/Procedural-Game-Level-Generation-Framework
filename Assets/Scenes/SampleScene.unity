@@ -504,28 +504,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d5a19c3af7fb1d46b3714ac88054a20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkPrefab: {fileID: 0}
-  refferenceObject: {fileID: 0}
-  renderRadius: 5
-  chunkSize: 16
-  chunkScale: 1
+  chunkPrefab: {fileID: 1758270364}
+  refferenceObject: {fileID: 330585543}
+  renderRadius: 32
+  chunkSize: 64
+  chunkScale: 0.25
   UVscale: 1
-  perlinScale: 1
-  octaves: 1
-  persistence: 0.5
-  lacunarity: 2
-  frequency: 1
+  perlinScale: 90
+  octaves: 8
+  persistence: 0.3
+  lacunarity: 3.2
+  frequency: 0.05
   perlinOffsetX: 0
   perlinOffsetZ: 0
   offsetX: 0
   offsetZ: 0
-  amplitude: 100
-  sharpness: 1
+  amplitude: 400
+  sharpness: 3
   maxHeight: 1
-  noiseBias: 0
+  noiseBias: 0.6
   absoluteHeight: 0
   fogColor: {r: 1, g: 1, b: 1, a: 1}
-  basicMaterial: {fileID: 0}
+  basicMaterial: {fileID: -876546973899608171, guid: 39036748944d9e249b5d8008938b357b, type: 3}
+  UseBasicMaterial: 1
+  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
+  slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
+  slopeBias: 0.5
+  slopeSharpness: 25
 --- !u!4 &1024742667
 Transform:
   m_ObjectHideFlags: 0
@@ -706,7 +711,17 @@ MonoBehaviour:
   offsetX: 0
   offsetZ: 0
   amplitude: 100
-  material: {fileID: 2100000, guid: cc5aa767bcc24be4f9173f08428d9f93, type: 2}
+  sharpness: 1
+  maxHeight: 1
+  noiseBias: 0
+  absoluteHeight: 0
+  basicMaterial: {fileID: 0}
+  UseBasicMaterial: 1
+  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
+  slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
+  slopeBias: 0.5
+  slopeSharpness: 25
+  fogColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
