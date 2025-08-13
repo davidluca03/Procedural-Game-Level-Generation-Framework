@@ -208,7 +208,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -426,6 +426,137 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!1 &721711614
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 721711616}
+  - component: {fileID: 721711615}
+  m_Layer: 0
+  m_Name: biomeGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &721711615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721711614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e23549ec7eeb4e94c8b088da5b6e249a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  biomes:
+  - Name: Jungle
+    Color: {r: 0.51995873, g: 0.6886792, b: 0.09420614, a: 0}
+    minTemp: 60
+    maxTemp: 100
+    minHumidity: 60
+    maxHumidity: 100
+    perlinScale: 0
+  - Name: Snowy Tundra
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    minTemp: 0
+    maxTemp: 20
+    minHumidity: 0
+    maxHumidity: 60
+    perlinScale: 0
+  - Name: Plains
+    Color: {r: 0.591851, g: 0.7735849, b: 0.26637593, a: 0}
+    minTemp: 20
+    maxTemp: 60
+    minHumidity: 0
+    maxHumidity: 40
+    perlinScale: 0
+  - Name: Savanna
+    Color: {r: 0.6025978, g: 0.6037736, b: 0.36169454, a: 0}
+    minTemp: 60
+    maxTemp: 80
+    minHumidity: 0
+    maxHumidity: 40
+    perlinScale: 0
+  - Name: Dessert
+    Color: {r: 1, g: 0.6135602, b: 0, a: 0}
+    minTemp: 80
+    maxTemp: 100
+    minHumidity: 0
+    maxHumidity: 60
+    perlinScale: 0
+  - Name: Forest
+    Color: {r: 0.014017452, g: 0.4245283, b: 0.067713544, a: 0}
+    minTemp: 20
+    maxTemp: 80
+    minHumidity: 40
+    maxHumidity: 60
+    perlinScale: 0
+  - Name: Snowy Taiga
+    Color: {r: 0.09834461, g: 0.3207547, b: 0.22179756, a: 0}
+    minTemp: 0
+    maxTemp: 20
+    minHumidity: 40
+    maxHumidity: 100
+    perlinScale: 0
+  - Name: Giant Spruce Taiga
+    Color: {r: 0.31955323, g: 0.4056604, b: 0.34848502, a: 0}
+    minTemp: 20
+    maxTemp: 40
+    minHumidity: 80
+    maxHumidity: 100
+    perlinScale: 0
+  - Name: Dark Forest
+    Color: {r: 0.0685543, g: 0.09433961, b: 0, a: 0}
+    minTemp: 40
+    maxTemp: 60
+    minHumidity: 80
+    maxHumidity: 100
+    perlinScale: 0
+  - Name: Birch Forest
+    Color: {r: 0.21933961, g: 0.5, b: 0.32680112, a: 0}
+    minTemp: 40
+    maxTemp: 60
+    minHumidity: 60
+    maxHumidity: 80
+    perlinScale: 0
+  - Name: Taiga
+    Color: {r: 0.044010334, g: 0.4056604, b: 0.31258106, a: 0}
+    minTemp: 20
+    maxTemp: 40
+    minHumidity: 60
+    maxHumidity: 80
+    perlinScale: 0
+  maxTemp: 100
+  maxHumidity: 100
+  size: 200
+  scale: 0.1
+  perlinScale: 90
+  biomeMaterial: {fileID: -876546973899608171, guid: 10cf6830aa1aa6145b339b7a0a776dab, type: 3}
+  tempSeed: 3123123
+  humditySeed: 1233123
+  adjustment: 0.1
+--- !u!4 &721711616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721711614}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,11 +637,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 1758270364}
   refferenceObject: {fileID: 330585543}
-  renderRadius: 32
+  renderRadius: 0
   chunkSize: 64
   chunkScale: 0.25
   UVscale: 1
-  perlinScale: 90
+  perlinScale: 45
   octaves: 8
   persistence: 0.3
   lacunarity: 3.2
@@ -519,12 +650,13 @@ MonoBehaviour:
   perlinOffsetZ: 0
   offsetX: 0
   offsetZ: 0
-  amplitude: 400
+  amplitude: 200
   sharpness: 3
   maxHeight: 1
   noiseBias: 0.6
   absoluteHeight: 0
-  fogColor: {r: 1, g: 1, b: 1, a: 1}
+  fogColor: {r: 0.7019608, g: 1, b: 1, a: 1}
+  fogStart: 0
   basicMaterial: {fileID: -876546973899608171, guid: 39036748944d9e249b5d8008938b357b, type: 3}
   UseBasicMaterial: 1
   planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
@@ -543,7 +675,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1758270365}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1412969978
@@ -648,7 +781,7 @@ Transform:
   m_GameObject: {fileID: 1412969978}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 2.72, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -679,12 +812,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1758270364}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1024742667}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1758270366
 MonoBehaviour:
@@ -698,7 +831,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2802150765b921845bd38ce7d3b2ab38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkSize: 32
+  chunkSize: 0
   chunkScale: 0.5
   UVscale: 1
   perlinScale: 60
@@ -722,6 +855,7 @@ MonoBehaviour:
   slopeBias: 0.5
   slopeSharpness: 25
   fogColor: {r: 1, g: 1, b: 1, a: 1}
+  fogStart: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -730,5 +864,5 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1412969982}
-  - {fileID: 1758270365}
   - {fileID: 1024742667}
+  - {fileID: 721711616}

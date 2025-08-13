@@ -6,6 +6,7 @@ using UnityEngine;
 public class chunkScript : MonoBehaviour
 {
 
+    public int seed;
     public int chunkSize = 16;
     public float chunkScale = 1;
     public float UVscale = 1;
@@ -32,6 +33,7 @@ public class chunkScript : MonoBehaviour
     public Color fogColor = Color.white;
     public float fogStart = 0.0f;
     private Renderer objectRenderer;
+    private FBM_Noise noise;
 
 
     private void OnDestroy()
@@ -233,8 +235,12 @@ public class chunkScript : MonoBehaviour
             for (int z = 0; z <= size; z++)
             {
                 int index = x * (size + 1) + z;
+
+                float sampleX = (x + perlinOffsetX) / perlinScale;
+                float sampleZ = (z + perlinOffsetZ) / perlinScale;
+                float y_value = noise.FBM_NoiseValue(sampleX, sampleZ, false) * amplitude;
                 vertices[index] = new Vector3((x - (float)size / 2) * scale,
-                                                computeHeight((float)(x + perlinOffsetX) / perlinScale, (float)(z + perlinOffsetZ) / perlinScale, frequency, amplitude),
+                                                y_value,
                                                 (z - (float)size / 2) * scale);
                 //Debug.Log($"Vertex {index}: {vertices[index]} at position ({x}, {z}) with height {vertices[index].y}");
             }
@@ -319,6 +325,7 @@ public class chunkScript : MonoBehaviour
     }
     void Start()
     {
+        noise = new FBM_Noise(seed, amplitude, persistence, frequency, lacunarity, octaves);
         createMesh();
     }
 
