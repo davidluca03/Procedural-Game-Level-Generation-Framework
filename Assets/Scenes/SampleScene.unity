@@ -537,11 +537,11 @@ MonoBehaviour:
   maxHumidity: 100
   size: 200
   scale: 0.1
-  perlinScale: 90
+  perlinScale: 100
   biomeMaterial: {fileID: -876546973899608171, guid: 10cf6830aa1aa6145b339b7a0a776dab, type: 3}
-  tempSeed: 3123123
-  humditySeed: 1233123
-  adjustment: 0.1
+  tempSeed: 213
+  humditySeed: 1231
+  adjustment: 0.55
 --- !u!4 &721711616
 Transform:
   m_ObjectHideFlags: 0
@@ -637,11 +637,61 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 1758270364}
   refferenceObject: {fileID: 330585543}
-  renderRadius: 0
+  renderRadius: 10
   chunkSize: 64
   chunkScale: 0.25
   UVscale: 1
   perlinScale: 45
+  seed: 0
+  gradient:
+    serializedVersion: 2
+    key0: {r: 0, g: 1, b: 0.99020815, a: 1}
+    key1: {r: 1, g: 0.97704625, b: 0.5330188, a: 1}
+    key2: {r: 0, g: 1, b: 0.3122611, a: 0}
+    key3: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 0}
+    key4: {r: 0.23529413, g: 0.23529413, b: 0.23529413, a: 0}
+    key5: {r: 1, g: 1, b: 1, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 13300
+    ctime2: 26600
+    ctime3: 42405
+    ctime4: 55512
+    ctime5: 64957
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 6
+    m_NumAlphaKeys: 2
+  Biomes:
+  - Name: Blue
+    Color: {r: 0, g: 1, b: 0.8065431, a: 0}
+    minTemp: 0
+    maxTemp: 50
+    minHumidity: 0
+    maxHumidity: 100
+    perlinScale: 0
+  - Name: Red
+    Color: {r: 1, g: 0, b: 0.030305386, a: 0}
+    minTemp: 50
+    maxTemp: 100
+    minHumidity: 0
+    maxHumidity: 100
+    perlinScale: 0
+  biomeAdjustment: 1
+  maxTemp: 100
+  maxHumidity: 100
+  biomeScale: 1000
   octaves: 8
   persistence: 0.3
   lacunarity: 3.2
@@ -831,6 +881,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2802150765b921845bd38ce7d3b2ab38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  seed: 0
+  biomeScale: 1
+  biomeAdjustment: 1
+  maxTemp: 100
+  maxHumidity: 100
+  Biomes: []
   chunkSize: 0
   chunkScale: 0.5
   UVscale: 1
@@ -850,6 +906,36 @@ MonoBehaviour:
   absoluteHeight: 0
   basicMaterial: {fileID: 0}
   UseBasicMaterial: 1
+  gradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
   planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
   slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
   slopeBias: 0.5

@@ -1,17 +1,32 @@
 using System;
-using TreeEditor;
-using Unity.VisualScripting;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
+
+// O structură pentru a stoca datele mesh-ului
+public struct MeshData
+{
+    public Vector3[] vertices;
+    public int[] triangles;
+    public Vector2[] uvs;
+    public Color[] colors;
+}
 
 public class chunkScript : MonoBehaviour
 {
-
     public int seed;
+    private biomeMap biomeMap;
+    public float biomeScale = 1.0f;
+    public float biomeAdjustment = 1.0f;
+    public float maxTemp = 100.0f;
+    public float maxHumidity = 100.0f;
+    public List<Biome> Biomes;
     public int chunkSize = 16;
     public float chunkScale = 1;
     public float UVscale = 1;
     public float perlinScale = 1.0f;
-    public float octaves = 1;
+    public int octaves = 1;
     public float persistence = 0.5f;
     public float lacunarity = 2.0f;
     public float frequency = 1.0f;
@@ -23,9 +38,10 @@ public class chunkScript : MonoBehaviour
     public float sharpness = 1.0f;
     public float maxHeight = 1.0f;
     public float noiseBias = 0.0f;
-    public Boolean absoluteHeight = false;
+    public bool absoluteHeight = false;
     public Material basicMaterial;
-    public Boolean UseBasicMaterial = true;
+    public bool UseBasicMaterial = true;
+    public Gradient gradient;
     public Color planeColor = Color.darkGreen;
     public Color slopeColor = Color.dimGray;
     public float slopeBias = 0.5f;
@@ -33,8 +49,25 @@ public class chunkScript : MonoBehaviour
     public Color fogColor = Color.white;
     public float fogStart = 0.0f;
     private Renderer objectRenderer;
+    private float[,] heightMap;
     private FBM_Noise noise;
+    private FBM_Noise tempNoise;
+    private FBM_Noise humidityNoise;
+    private CancellationTokenSource cancellationTokenSource;
 
+    private void OnEnable()
+    {
+        cancellationTokenSource = new CancellationTokenSource();
+    }
+
+    private void OnDisable()
+    {
+        if (cancellationTokenSource != null)
+        {
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource.Dispose();
+        }
+    }
 
     private void OnDestroy()
     {
@@ -46,152 +79,119 @@ public class chunkScript : MonoBehaviour
         }
     }
 
-    public void updateMeshVertices()
+    public async Task UpdateMeshAsync(CancellationToken cancellationToken)
     {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter != null && meshFilter.mesh != null)
+        noise = new FBM_Noise(seed, amplitude, persistence, frequency, lacunarity, octaves, sharpness);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (cancellationToken.IsCancellationRequested)
         {
-            meshFilter.mesh.Clear();
-
-            Vector3[] vertices = createVertices(chunkSize, chunkScale);
-            int[] triangles = createTriangles(chunkSize);
-            Vector2[] uvs = createUVs(chunkSize);
-
-            meshFilter.mesh.vertices = vertices;
-            meshFilter.mesh.triangles = triangles;
-            meshFilter.mesh.uv = uvs;
-
-            meshFilter.mesh.RecalculateNormals();
-            meshFilter.mesh.RecalculateBounds();
+            return;
         }
+        
+        MeshData meshData = await Task.Run(() => GenerateMeshData());
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        
+        ApplyMeshDataToMesh(meshData);
+        UpdateMaterialProperties();
     }
 
-    public void updateOctaves(float newOctaves)
+    public void RequestMeshUpdate()
     {
-        octaves = newOctaves;
-        updateMeshVertices();
-    }
+        if (cancellationTokenSource != null)
+        {
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource = new CancellationTokenSource();
+        }
+        else
+        {
+            cancellationTokenSource = new CancellationTokenSource();
+        }
 
-    public void updateAmplitude(float newAmplitude)
-    {
-        amplitude = newAmplitude;
-        updateMeshVertices();
-    }
-
-    public void updatePersistence(float newPersistence)
-    {
-        persistence = newPersistence;
-        updateMeshVertices();
-    }
-
-    public void updateFrequency(float newFrequency)
-    {
-        frequency = newFrequency;
-        updateMeshVertices();
-    }
-
-    public void updateLacunarity(float newLacunarity)
-    {
-        lacunarity = newLacunarity;
-        updateMeshVertices();
-    }
-
-    public void updatePerlinScale(float newPerlinScale)
-    {
-        perlinScale = newPerlinScale;
-        updateMeshVertices();
-    }
-
-    public void updateUVScale(float newUVScale) 
-    {
-        UVscale = newUVScale;
-        updateMeshVertices();
-    }
-
-    public void updateSharpness(float newSharpness)
-    {
-        sharpness = newSharpness;
-        updateMeshVertices();
-    }
-
-    public void updateMaxHeight(float newMaxHeight)
-    {
-        maxHeight = newMaxHeight;
-        updateMeshVertices();
-    }
-
-    public void updateAbsoluteHeight(Boolean newAbsoluteHeight)
-    {
-        absoluteHeight = newAbsoluteHeight;
-        updateMeshVertices();
-    }
-
-    public void updateNoiseBias(float newNoiseBias)
-    {
-        noiseBias = newNoiseBias;
-        updateMeshVertices();
+        UpdateMeshAsync(cancellationTokenSource.Token);
     }
     
-    public void updateFogColor(Color newFogColor)
+    private MeshData GenerateMeshData()
     {
-        if (objectRenderer == null)
+        MeshData data = new MeshData();
+        data.vertices = createVertices(chunkSize, chunkScale);
+        data.triangles = createTriangles(chunkSize);
+        data.uvs = createUVs(chunkSize);
+        data.colors = createColors(chunkSize);
+        return data;
+    }
+
+    private void ApplyMeshDataToMesh(MeshData data)
+    {
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter == null)
+            meshFilter = gameObject.AddComponent<MeshFilter>();
+        
+        Mesh mesh = new Mesh();
+        mesh.vertices = data.vertices;
+        mesh.triangles = data.triangles;
+        mesh.uv = data.uvs;
+        mesh.colors = data.colors;
+        mesh.RecalculateNormals();
+
+        if (meshFilter.mesh != null)
         {
-            objectRenderer = GetComponent<Renderer>();
+            Destroy(meshFilter.mesh);
         }
-        objectRenderer.sharedMaterial.SetColor("_fogColor", newFogColor);
+        meshFilter.mesh = mesh;
     }
 
-    public void updateFogStart(float newFogStart)
+    private void UpdateMaterialProperties()
     {
-        if (objectRenderer == null)
+        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer == null)
+            meshRenderer = gameObject.AddComponent<MeshRenderer>();
+
+        if (basicMaterial != null)
         {
-            objectRenderer = GetComponent<Renderer>();
+            meshRenderer.sharedMaterial = basicMaterial;
         }
-        objectRenderer.sharedMaterial.SetFloat("_fogStart", newFogStart);
-    }
 
-    public void updateUsingBasicMaterial(Boolean newUseBasicMaterial)
-    {
-        UseBasicMaterial = newUseBasicMaterial;
-        //TODO
-    }
-
-    public void updatePlaneColor(Color newPlaneColor)
-    {
-        if (objectRenderer == null)
+        objectRenderer = GetComponent<Renderer>();
+        if (objectRenderer != null && objectRenderer.sharedMaterial != null)
         {
-            objectRenderer = GetComponent<Renderer>();
+            objectRenderer.sharedMaterial.SetColor("_fogColor", fogColor);
+            objectRenderer.sharedMaterial.SetFloat("_fogStart", fogStart);
+            if (UseBasicMaterial)
+            {
+                objectRenderer.sharedMaterial.SetColor("_planeColor", planeColor);
+                objectRenderer.sharedMaterial.SetColor("_slopeColor", slopeColor);
+                objectRenderer.sharedMaterial.SetFloat("_slopeBias", slopeBias);
+                objectRenderer.sharedMaterial.SetFloat("_slopeSharpness", slopeSharpness);
+            }
         }
-        objectRenderer.sharedMaterial.SetColor("_planeColor", newPlaneColor);
     }
 
-    public void updateSlopeColor(Color newSlopeColor)
-    {
-        if (objectRenderer == null)
-        {
-            objectRenderer = GetComponent<Renderer>();
-        }
-        objectRenderer.sharedMaterial.SetColor("_slopeColor", newSlopeColor);
-    }
-
-    public void updateSlopeBias(float newSlopeBias)
-    {
-        if (objectRenderer == null)
-        {
-            objectRenderer = GetComponent<Renderer>();
-        }
-        objectRenderer.sharedMaterial.SetFloat("_slopeBias", newSlopeBias);
-    }
-
-    public void updateSlopeSharpness(float newSlopeSharpness)
-    {
-        if (objectRenderer == null)
-        {
-            objectRenderer = GetComponent<Renderer>();
-        }
-        objectRenderer.sharedMaterial.SetFloat("_slopeSharpness", newSlopeSharpness);
-    }
-
+    public void updateSeed(int newSeed) { seed = newSeed; RequestMeshUpdate(); }
+    public void updateOctaves(int newOctaves) { octaves = newOctaves; RequestMeshUpdate(); }
+    public void updateAmplitude(float newAmplitude) { amplitude = newAmplitude; RequestMeshUpdate(); }
+    public void updatePersistence(float newPersistence) { persistence = newPersistence; RequestMeshUpdate(); }
+    public void updateFrequency(float newFrequency) { frequency = newFrequency; RequestMeshUpdate(); }
+    public void updateLacunarity(float newLacunarity) { lacunarity = newLacunarity; RequestMeshUpdate(); }
+    public void updatePerlinScale(float newPerlinScale) { perlinScale = newPerlinScale; RequestMeshUpdate(); }
+    public void updateUVScale(float newUVScale) { UVscale = newUVScale; RequestMeshUpdate(); }
+    public void updateSharpness(float newSharpness) { sharpness = newSharpness; RequestMeshUpdate(); }
+    public void updateMaxHeight(float newMaxHeight) { maxHeight = newMaxHeight; RequestMeshUpdate(); }
+    public void updateAbsoluteHeight(bool newAbsoluteHeight) { absoluteHeight = newAbsoluteHeight; RequestMeshUpdate(); }
+    public void updateNoiseBias(float newNoiseBias) { noiseBias = newNoiseBias; RequestMeshUpdate(); }
+    public void updateGradient(Gradient newGradient) { gradient = newGradient; RequestMeshUpdate(); }
+    public void updateFogColor(Color newFogColor) { fogColor = newFogColor; UpdateMaterialProperties(); }
+    public void updateFogStart(float newFogStart) { fogStart = newFogStart; UpdateMaterialProperties(); }
+    public void updateUsingBasicMaterial(bool newUseBasicMaterial) { UseBasicMaterial = newUseBasicMaterial; UpdateMaterialProperties(); }
+    public void updatePlaneColor(Color newPlaneColor) { planeColor = newPlaneColor; UpdateMaterialProperties(); }
+    public void updateSlopeColor(Color newSlopeColor) { slopeColor = newSlopeColor; UpdateMaterialProperties(); }
+    public void updateSlopeBias(float newSlopeBias) { slopeBias = newSlopeBias; UpdateMaterialProperties(); }
+    public void updateSlopeSharpness(float newSlopeSharpness) { slopeSharpness = newSlopeSharpness; UpdateMaterialProperties(); }
+    
     public void Awake()
     {
         if (basicMaterial == null)
@@ -214,35 +214,30 @@ public class chunkScript : MonoBehaviour
             amp *= persistence;
             ampDecay *= persistence;
         }
-        //return (Math.Abs(Math.Abs(height / maxAmp) - 0.8f) - 0.5f) * amplitude;
         if (absoluteHeight)
         {
             return (float)Math.Abs(Math.Pow(height / maxAmp, sharpness)) * amplitude;
         }
         else
         {
-            return (float) Math.Pow(height / maxAmp, sharpness) * amplitude; 
+            return (float)Math.Pow(height / maxAmp, sharpness) * amplitude;
         }
-        
     }
 
     private Vector3[] createVertices(int size, float scale)
     {
         Vector3[] vertices = new Vector3[(size + 1) * (size + 1)];
-
+        heightMap = new float[size + 1, size + 1];
         for (int x = 0; x <= size; x++)
         {
             for (int z = 0; z <= size; z++)
             {
                 int index = x * (size + 1) + z;
-
                 float sampleX = (x + perlinOffsetX) / perlinScale;
                 float sampleZ = (z + perlinOffsetZ) / perlinScale;
                 float y_value = noise.FBM_NoiseValue(sampleX, sampleZ, false) * amplitude;
-                vertices[index] = new Vector3((x - (float)size / 2) * scale,
-                                                y_value,
-                                                (z - (float)size / 2) * scale);
-                //Debug.Log($"Vertex {index}: {vertices[index]} at position ({x}, {z}) with height {vertices[index].y}");
+                heightMap[x, z] = y_value;
+                vertices[index] = new Vector3((x - (float)size / 2) * scale, y_value, (z - (float)size / 2) * scale);
             }
         }
         return vertices;
@@ -252,7 +247,6 @@ public class chunkScript : MonoBehaviour
     {
         int[] triangles = new int[size * size * 6];
         int indexCounter = 0;
-
         for (int x = 0; x < size; x++)
         {
             for (int z = 0; z < size; z++)
@@ -261,11 +255,9 @@ public class chunkScript : MonoBehaviour
                 int topRight = topLeft + 1;
                 int bottomLeft = (x + 1) * (size + 1) + z;
                 int bottomRight = bottomLeft + 1;
-
                 triangles[indexCounter++] = topLeft;
                 triangles[indexCounter++] = topRight;
                 triangles[indexCounter++] = bottomLeft;
-
                 triangles[indexCounter++] = topRight;
                 triangles[indexCounter++] = bottomRight;
                 triangles[indexCounter++] = bottomLeft;
@@ -277,7 +269,6 @@ public class chunkScript : MonoBehaviour
     private Vector2[] createUVs(int size)
     {
         Vector2[] uvs = new Vector2[(size + 1) * (size + 1)];
-
         for (int x = 0; x <= size; x++)
         {
             for (int z = 0; z <= size; z++)
@@ -289,68 +280,54 @@ public class chunkScript : MonoBehaviour
         return uvs;
     }
 
-    private void createMesh()
+    float Adjust(float noise, float adjustment)
     {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        noise = noise * 2 - 1;
+        noise = Math.Sign(noise) * Mathf.Pow(Mathf.Abs(noise), adjustment);
+        noise = (noise + 1) / 2;
+        return noise;
+    }
 
-        if (meshFilter == null)
-            meshFilter = gameObject.AddComponent<MeshFilter>();
+    private Color[] createColors(int size)
+    {
+        Color[] colors = new Color[(size + 1) * (size + 1)];
+        int i = 0;
 
-        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
-
-        if (meshRenderer == null)
-            meshRenderer = gameObject.AddComponent<MeshRenderer>();
-
-        Mesh mesh = new Mesh();
-        meshRenderer.sharedMaterial = basicMaterial;
-
-        mesh.vertices = createVertices(chunkSize, chunkScale);
-        mesh.triangles = createTriangles(chunkSize);
-        mesh.uv = createUVs(chunkSize);
-        mesh.RecalculateNormals();
-
-        meshFilter.mesh = mesh;
-
-        objectRenderer = GetComponent<Renderer>();
-        objectRenderer.sharedMaterial.SetColor("_fogColor", fogColor);
-
-        if (UseBasicMaterial)
+        for (int x = 0; x <= size; x++)
         {
-            objectRenderer.sharedMaterial = basicMaterial;
-            objectRenderer.sharedMaterial.SetColor("_planeColor", planeColor);
-            objectRenderer.sharedMaterial.SetColor("_slopeColor", slopeColor);
-            objectRenderer.sharedMaterial.SetFloat("_slopeBias", slopeBias);
-            objectRenderer.sharedMaterial.SetFloat("_slopeSharpness", slopeSharpness);
+            for (int z = 0; z <= size; z++)
+            {
+                //float alpha = Mathf.InverseLerp(0, amplitude, (heightMap[x, z] + amplitude) / 2);
+                //colors[i++] = gradient.Evaluate(alpha);
+
+                int index = x * (size + 1) + z;
+
+                float sampleX = ((float)x + perlinOffsetX) / biomeScale;
+                float sampleZ = ((float)z + perlinOffsetZ) / biomeScale;
+
+                float tempNoiseVal = Adjust(tempNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
+                float humidityNoiseVal = Adjust(humidityNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
+
+                float tempValue = tempNoiseVal * maxTemp;
+                float humidityValue = humidityNoiseVal * maxHumidity;
+
+                colors[index] = biomeMap.getBiomeColor(tempValue, humidityValue);
+            }
         }
-    }
-    void Start()
-    {
-        noise = new FBM_Noise(seed, amplitude, persistence, frequency, lacunarity, octaves);
-        createMesh();
+        return colors;
     }
 
-    public void setAttributes(int size, float scale, float uvScale, float perlinScale, float octaves,
-        float persistence, float lacunarity, float frequency, float offsetX, float offsetZ,
-        float amplitude, Color fogColor, float sharpness)
+    public void Start()
     {
-        this.chunkSize = size;
-        this.chunkScale = scale;
-        this.UVscale = uvScale;
-        this.perlinScale = perlinScale;
-        this.octaves = octaves;
-        this.persistence = persistence;
-        this.lacunarity = lacunarity;
-        this.frequency = frequency;
-        this.offsetX = offsetX;
-        this.offsetZ = offsetZ;
-        this.amplitude = amplitude;
-        this.fogColor = fogColor;
-        this.sharpness = sharpness;
-    }
+        biomeMap = new biomeMap(maxTemp, maxHumidity, Biomes);
+        noise = new FBM_Noise(seed, amplitude, persistence, frequency, lacunarity, octaves, sharpness);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        System.Random r = new System.Random(seed);
+        int tempSeed = r.Next();
+        int humditySeed = r.Next();
+        tempNoise = new FBM_Noise(tempSeed, 1f, 0.5f, 2f, 3f, 3);
+        humidityNoise = new FBM_Noise(humditySeed, 1f, 0.5f, 2f, 3f, 3);
+
+        RequestMeshUpdate();
     }
 }

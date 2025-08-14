@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Security.Cryptography;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UIElements;
 
 public class biomeGenerator : MonoBehaviour
@@ -88,11 +90,18 @@ public class biomeGenerator : MonoBehaviour
         return noise;
     }
 
+    private Color LerpColor(Color a, Color b, float t)
+    {
+        return (1 - t) * a + b;
+    }
+
+    private float Hermite(float t) => t * t * t * (t * (t * 6f - 15f) + 10f);
+
     private Color[] createColors(int size)
     {
         Color[] colors = new Color[(size + 1) * (size + 1)];
-        FBM_Noise tempNoise = new FBM_Noise(tempSeed, 1f, 0.5f, 2f, 3f, 3f);
-        FBM_Noise humidityNoise = new FBM_Noise(humditySeed, 1f, 0.5f, 2f, 3f, 3f);
+        FBM_Noise tempNoise = new FBM_Noise(tempSeed, 1f, 0.5f, 2f, 3f, 3);
+        FBM_Noise humidityNoise = new FBM_Noise(humditySeed, 1f, 0.5f, 2f, 3f, 3);
 
         for (int x = 0; x <= size; x++)
         {

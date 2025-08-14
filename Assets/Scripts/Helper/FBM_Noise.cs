@@ -1,26 +1,20 @@
-using Unity.VisualScripting.FullSerializer;
-using UnityEditor.UI;
 using UnityEngine;
-using UnityEngine.UIElements;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Globalization;
-using Unity.Collections;
-
 
 [System.Serializable]
 public class FBM_Noise
 {
-    public int seed;
-    public float amplitude;
-    public float persistence;
-    public float frequency;
-    public float lacuranicy;
-    public float octaves;
-    private int[] p;
+    private readonly int seed;
+    private readonly float amplitude;
+    private readonly float persistence;
+    private readonly float frequency;
+    private readonly float lacuranicy;
+    private readonly int octaves;
+    private readonly float sharpness;
+    private readonly int[] p;
 
-
-    public FBM_Noise(int seed, float amplitude, float persistence, float frequency, float lacuranicy, float octaves)
+    public FBM_Noise(int seed, float amplitude, float persistence, float frequency, float lacuranicy, int octaves, float sharpness = 1)
     {
         this.seed = seed;
         this.amplitude = amplitude;
@@ -28,41 +22,56 @@ public class FBM_Noise
         this.frequency = frequency;
         this.lacuranicy = lacuranicy;
         this.octaves = octaves;
-
-        System.Random r = new System.Random(seed);
-
-        List<int> nums = Enumerable.Range(0, 256).ToList();
-
-        for (int i = 255; i >= 0; i--)
-        {
-            int j = r.Next(i + 1);
-
-            int temp = nums[i];
-            nums[i] = nums[j];
-            nums[j] = temp;
-        }
+        this.sharpness = sharpness;
 
         this.p = new int[512];
-        nums.CopyTo(p, 0);
-        nums.CopyTo(p, 256);
+        int[] permutation = new int[256];
+
+        for (int i = 0; i < 256; i++)
+        {
+            permutation[i] = i;
+        }
+
+        System.Random r = new System.Random(seed);
+        
+        for (int i = 0; i < 256; i++)
+        {
+            int j = r.Next(256);
+            int temp = permutation[i];
+            permutation[i] = permutation[j];
+            permutation[j] = temp;
+        }
+
+        for (int i = 0; i < 256; i++)
+        {
+            p[i] = p[i + 256] = permutation[i];
+        }
     }
 
-    public float Hermite(float t)
-    {
-        return t * t * t * (t * (t * 6f - 15f) + 10f);
-    }
+    private float Hermite(float t) => t * t * t * (t * (t * 6f - 15f) + 10f);
 
-    public float Lerp(float a, float b, float t)
+    private float Gradient(int hash, float x, float y)
     {
-        return (1 - t) * a + t * b;
-    }
-
-    public float Gradient(int hash, float x, float y)
-    {
-        int h = hash & 15;
-        float u = h < 8 ? x : y;
-        float v = h < 4 ? y : (h == 12 || h == 14 ? x : 0);
-        return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+        switch (hash & 0xF)
+        {
+            case 0x0: return x + y;
+            case 0x1: return -x + y;
+            case 0x2: return x - y;
+            case 0x3: return -x - y;
+            case 0x4: return x + y;
+            case 0x5: return -x + y;
+            case 0x6: return x - y;
+            case 0x7: return -x - y;
+            case 0x8: return x;
+            case 0x9: return -x;
+            case 0xA: return x;
+            case 0xB: return -x;
+            case 0xC: return y;
+            case 0xD: return -y;
+            case 0xE: return y;
+            case 0xF: return -y;
+            default: return 0;
+        }
     }
 
     public float PerlinNoise2D(float x, float y)
@@ -70,48 +79,49 @@ public class FBM_Noise
         int X = (int)Mathf.Floor(x) & 255;
         int Y = (int)Mathf.Floor(y) & 255;
 
-        x -= (float)Mathf.Floor(x);
-        y -= (float)Mathf.Floor(y);
+        x -= Mathf.Floor(x);
+        y -= Mathf.Floor(y);
 
         float u = Hermite(x);
         float v = Hermite(y);
 
-        int AA = p[p[X] + Y];
-        int AB = p[p[X] + Y + 1];
-        int BA = p[p[X + 1] + Y];
-        int BB = p[p[X + 1] + Y + 1];
+        int A = p[X] + Y;
+        int B = p[X + 1] + Y;
 
-        float dot_AA = Gradient(AA, x, y);
-        float dot_AB = Gradient(AB, x, y - 1);
-        float dot_BA = Gradient(BA, x - 1, y);
-        float dot_BB = Gradient(BB, x - 1, y - 1);
+        float res = Mathf.Lerp(
+            Mathf.Lerp(Gradient(p[A], x, y), Gradient(p[B], x - 1, y), u),
+            Mathf.Lerp(Gradient(p[A + 1], x, y - 1), Gradient(p[B + 1], x - 1, y - 1), u),
+            v
+        );
 
-        float lerpX1 = Lerp(dot_AA, dot_BA, u);
-        float lerpX2 = Lerp(dot_AB, dot_BB, u);
-
-        return Lerp(lerpX1, lerpX2, v);
+        return res;
     }
 
     public float FBM_NoiseValue(float x, float y, bool normalize = true)
     {
-        float maxAmp = 0;
-        float totalAmp = 0;
-
-        float currentAmp = this.amplitude;
-        float currentFreq = this.frequency;
+        float total = 0;
+        float maxAmplitude = 0;
+        float currentAmplitude = this.amplitude;
+        float currentFrequency = this.frequency;
 
         for (int i = 0; i < octaves; i++)
         {
-            totalAmp += PerlinNoise2D(x * currentFreq, y * currentFreq) * currentAmp;
-            maxAmp += currentAmp;
+            total += PerlinNoise2D(x * currentFrequency, y * currentFrequency) * currentAmplitude;
+            maxAmplitude += currentAmplitude;
 
-            currentAmp *= persistence;
-            currentFreq *= lacuranicy;
+            currentAmplitude *= persistence;
+            currentFrequency *= lacuranicy;
         }
 
-        if (normalize)
-            return (totalAmp / maxAmp + 1f) / 2f;
+        total = Mathf.Pow((total / maxAmplitude + 1) / 2, sharpness) * 2 - 1;
 
-        return totalAmp / maxAmp;
+        if (normalize)
+        {
+            return (total + 1f) / 2f;
+        }
+        else
+        {
+            return total;
+        }
     }
 }

@@ -1,14 +1,12 @@
-using NUnit.Framework;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
-using UnityEngine.Rendering;
-using UnityEngine.Analytics;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Threading;
+
 
 public class chunkGenerator : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public GameObject chunkPrefab;
     public GameObject refferenceObject;
     public int renderRadius = 5;
@@ -16,7 +14,14 @@ public class chunkGenerator : MonoBehaviour
     public float chunkScale = 1;
     public float UVscale = 1;
     public float perlinScale = 1.0f;
-    public float octaves = 1;
+    public int seed = 0;
+    public Gradient gradient;
+    public List<Biome> Biomes;
+    public float biomeAdjustment = 1.0f;
+    public float maxTemp = 100.0f;
+    public float maxHumidity = 100.0f;
+    public float biomeScale = 1.0f;
+    public int octaves = 1;
     public float persistence = 0.5f;
     public float lacunarity = 2.0f;
     public float frequency = 1.0f;
@@ -28,16 +33,16 @@ public class chunkGenerator : MonoBehaviour
     public float sharpness = 1.0f;
     public float maxHeight = 1.0f;
     public float noiseBias = 0.0f;
-    public Boolean absoluteHeight = false;
+    public bool absoluteHeight = false;
     public Color fogColor = Color.white;
     public float fogStart = 0.0f;
     public Material basicMaterial;
-    public Boolean UseBasicMaterial = true;
+    public bool UseBasicMaterial = true;
     public Color planeColor = Color.darkGreen;
     public Color slopeColor = Color.dimGray;
     public float slopeBias = 0.5f;
     public float slopeSharpness = 25.0f;
-    private Boolean previousUseBasicMaterial = true;
+    private bool previousUseBasicMaterial = true;
     private Color previousPlaneColor = Color.darkGreen;
     private Color previousSlopeColor = Color.dimGray;
     private float previousSlopeBias = 0.5f;
@@ -47,7 +52,8 @@ public class chunkGenerator : MonoBehaviour
     private Vector3 refferencePosition;
     private Color previousFogColor = Color.white;
     private float previousFogStart = 0.0f;
-    private float previousOctaves = 1.0f;
+    private int previousSeed = 0;
+    private int previousOctaves = 1;
     private float previousAmplitude = 1.0f;
     private float previousPerlinScale = 1.0f;
     private float previousPersistence = 0.5f;
@@ -57,11 +63,15 @@ public class chunkGenerator : MonoBehaviour
     private float previousSharpness = 1.0f;
     private float previousMaxHeight = 1.0f;
     private float previousNoiseBias = 0.0f;
-    private Boolean previousAbsoluteHeight = false;
+    private bool previousAbsoluteHeight = false;
     private float updateInterval = 1.0f;
     private float timer = 0.0f;
+    private Gradient previousGradient;
+    private CancellationTokenSource cancellationTokenSource;
+    
     void Start()
     {
+        cancellationTokenSource = new CancellationTokenSource();
         previousAmplitude = amplitude;
         previousPerlinScale = perlinScale;
         previousPersistence = persistence;
@@ -72,6 +82,7 @@ public class chunkGenerator : MonoBehaviour
         previousSharpness = sharpness;
         previousMaxHeight = maxHeight;
         previousNoiseBias = noiseBias;
+        previousSeed = seed;
         previousOctaves = octaves;
         previousUseBasicMaterial = UseBasicMaterial;
         previousPlaneColor = planeColor;
@@ -80,17 +91,54 @@ public class chunkGenerator : MonoBehaviour
         previousSlopeSharpness = slopeSharpness;
         previousAbsoluteHeight = absoluteHeight;
         previousFogStart = fogStart;
+        refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
+        previousGradient = new Gradient();
+        previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
+        SpawnChunks();
     }
 
-    private Boolean equalColors(Color color1, Color color2, float tolerance = 0.01f) {
+    private bool equalColors(Color color1, Color color2, float tolerance = 0.01f) {
         return Mathf.Abs(color1.r - color2.r) < tolerance &&
                Mathf.Abs(color1.g - color2.g) < tolerance &&
                Mathf.Abs(color1.b - color2.b) < tolerance &&
                Mathf.Abs(color1.a - color2.a) < tolerance;
     }
 
-    private Boolean compareFloats(float a, float b, float tolerance = 0.01f) {
+    private bool compareFloats(float a, float b, float tolerance = 0.01f) {
         return Mathf.Abs(a - b) < tolerance;
+    }
+
+    public bool AreGradientsApproximatelyEqual(Gradient g1, Gradient g2, float tolerance = 0.001f)
+    {
+        if (g1.colorKeys.Length != g2.colorKeys.Length || g1.alphaKeys.Length != g2.alphaKeys.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < g1.colorKeys.Length; i++)
+        {
+            GradientColorKey key1 = g1.colorKeys[i];
+            GradientColorKey key2 = g2.colorKeys[i];
+
+            if (Mathf.Abs(key1.time - key2.time) > tolerance ||
+                !equalColors(key1.color, key2.color, tolerance))
+            {
+                return false;
+            }
+        }
+
+        for (int i = 0; i < g1.alphaKeys.Length; i++)
+        {
+            GradientAlphaKey key1 = g1.alphaKeys[i];
+            GradientAlphaKey key2 = g2.alphaKeys[i];
+            
+            if (Mathf.Abs(key1.time - key2.time) > tolerance ||
+                Mathf.Abs(key1.alpha - key2.alpha) > tolerance)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void UpdateAllChunks(Action<chunkScript> updateAction)
@@ -104,95 +152,26 @@ public class chunkGenerator : MonoBehaviour
         }
     }
 
-    private void updateOctaves(float newOctaves)
-    {
-        UpdateAllChunks(chunk => chunk.updateOctaves(newOctaves));
-    }
-
-    private void updateAmplitude(float newAmplitude)
-    {
-        UpdateAllChunks(chunk => chunk.updateAmplitude(newAmplitude));
-    }
-
-    private void updatePersistence(float newPersistence)
-    {
-        UpdateAllChunks(chunk => chunk.updatePersistence(newPersistence));
-    }
-
-    private void updateFrequency(float newFrequency)
-    {
-        UpdateAllChunks(chunk => chunk.updateFrequency(newFrequency));
-    }
-
-    private void updateLacunarity(float newLacunarity)
-    {
-        UpdateAllChunks(chunk => chunk.updateLacunarity(newLacunarity));
-    }
-
-    private void updatePerlinScale(float newPerlinScale)
-    {
-        UpdateAllChunks(chunk => chunk.updatePerlinScale(newPerlinScale));
-    }
-
-    private void updateFogColor(Color newFogColor)
-    {
-        UpdateAllChunks(chunk => chunk.updateFogColor(newFogColor));
-    }
-
-    private void updateFogStart(float newFogStart)
-    {
-        UpdateAllChunks(chunk => chunk.updateFogStart(newFogStart));
-    }
-
-    private void updateUseBasicMaterial(bool newUseBasicMaterial)
-    {
-        UpdateAllChunks(chunk => chunk.updateUsingBasicMaterial(newUseBasicMaterial));
-    }
-
-    private void updatePlaneColor(Color newPlaneColor)
-    {
-        UpdateAllChunks(chunk => chunk.updatePlaneColor(newPlaneColor));
-    }
-
-    private void updateSlopeColor(Color newSlopeColor)
-    {
-        UpdateAllChunks(chunk => chunk.updateSlopeColor(newSlopeColor));
-    }
-
-    private void updateSlopeBias(float newSlopeBias)
-    {
-        UpdateAllChunks(chunk => chunk.updateSlopeBias(newSlopeBias));
-    }
-
-    private void updateSlopeSharpness(float newSlopeSharpness)
-    {
-        UpdateAllChunks(chunk => chunk.updateSlopeSharpness(newSlopeSharpness));
-    }
-
-    private void updateUVScale(float newUVScale)
-    {
-        UpdateAllChunks(chunk => chunk.updateUVScale(newUVScale));
-    }
-
-    private void updateSharpness(float newSharpness)
-    {
-        UpdateAllChunks(chunk => chunk.updateSharpness(newSharpness));
-    }
-
-    private void updateMaxHeight(float newMaxHeight)
-    {
-        UpdateAllChunks(chunk => chunk.updateMaxHeight(newMaxHeight));
-    }
-
-    private void updateNoiseBias(float newNoiseBias)
-    {
-        UpdateAllChunks(chunk => chunk.updateNoiseBias(newNoiseBias));
-    }
-
-    private void updateAbsoluteHeight(Boolean newAbsoluteHeight)
-    {
-        UpdateAllChunks(chunk => chunk.updateAbsoluteHeight(newAbsoluteHeight));
-    }
+    private void updateSeed(int newSeed) { UpdateAllChunks(chunk => chunk.updateSeed(newSeed)); }
+    private void updateOctaves(int newOctaves) { UpdateAllChunks(chunk => chunk.updateOctaves(newOctaves)); }
+    private void updateAmplitude(float newAmplitude) { UpdateAllChunks(chunk => chunk.updateAmplitude(newAmplitude)); }
+    private void updatePersistence(float newPersistence) { UpdateAllChunks(chunk => chunk.updatePersistence(newPersistence)); }
+    private void updateFrequency(float newFrequency) { UpdateAllChunks(chunk => chunk.updateFrequency(newFrequency)); }
+    private void updateLacunarity(float newLacunarity) { UpdateAllChunks(chunk => chunk.updateLacunarity(newLacunarity)); }
+    private void updatePerlinScale(float newPerlinScale) { UpdateAllChunks(chunk => chunk.updatePerlinScale(newPerlinScale)); }
+    private void updateFogColor(Color newFogColor) { UpdateAllChunks(chunk => chunk.updateFogColor(newFogColor)); }
+    private void updateFogStart(float newFogStart) { UpdateAllChunks(chunk => chunk.updateFogStart(newFogStart)); }
+    private void updateUseBasicMaterial(bool newUseBasicMaterial) { UpdateAllChunks(chunk => chunk.updateUsingBasicMaterial(newUseBasicMaterial)); }
+    private void updatePlaneColor(Color newPlaneColor) { UpdateAllChunks(chunk => chunk.updatePlaneColor(newPlaneColor)); }
+    private void updateSlopeColor(Color newSlopeColor) { UpdateAllChunks(chunk => chunk.updateSlopeColor(newSlopeColor)); }
+    private void updateSlopeBias(float newSlopeBias) { UpdateAllChunks(chunk => chunk.updateSlopeBias(newSlopeBias)); }
+    private void updateSlopeSharpness(float newSlopeSharpness) { UpdateAllChunks(chunk => chunk.updateSlopeSharpness(newSlopeSharpness)); }
+    private void updateUVScale(float newUVScale) { UpdateAllChunks(chunk => chunk.updateUVScale(newUVScale)); }
+    private void updateSharpness(float newSharpness) { UpdateAllChunks(chunk => chunk.updateSharpness(newSharpness)); }
+    private void updateMaxHeight(float newMaxHeight) { UpdateAllChunks(chunk => chunk.updateMaxHeight(newMaxHeight)); }
+    private void updateNoiseBias(float newNoiseBias) { UpdateAllChunks(chunk => chunk.updateNoiseBias(newNoiseBias)); }
+    private void updateAbsoluteHeight(bool newAbsoluteHeight) { UpdateAllChunks(chunk => chunk.updateAbsoluteHeight(newAbsoluteHeight)); }
+    private void updateGradient(Gradient newGradient) { UpdateAllChunks(chunk => chunk.updateGradient(newGradient)); }
 
     private void UpdateAttributesCheck()
     {
@@ -200,122 +179,101 @@ public class chunkGenerator : MonoBehaviour
         {
             updateAmplitude(amplitude);
             previousAmplitude = amplitude;
-            Debug.Log("Amplitude updated to: " + amplitude);
         }
-
         if (!compareFloats(previousPersistence, persistence))
         {
             updatePersistence(persistence);
             previousPersistence = persistence;
-            Debug.Log("Persistence updated to: " + persistence);
         }
-
         if (!compareFloats(previousFrequency, frequency))
         {
             updateFrequency(frequency);
             previousFrequency = frequency;
-            Debug.Log("Frequency updated to: " + frequency);
         }
-
         if (!compareFloats(previousLacunarity, lacunarity))
         {
             updateLacunarity(lacunarity);
             previousLacunarity = lacunarity;
-            Debug.Log("Lacunarity updated to: " + lacunarity);
         }
-
         if (!compareFloats(previousPerlinScale, perlinScale))
         {
             updatePerlinScale(perlinScale);
             previousPerlinScale = perlinScale;
-            Debug.Log("Perlin scale updated to: " + perlinScale);
         }
-
         if (!compareFloats(previousUVScale, UVscale))
         {
             updateUVScale(UVscale);
             previousUVScale = UVscale;
-            Debug.Log("UV scale updated to: " + UVscale);
         }
-
         if (!equalColors(previousFogColor, fogColor))
         {
             updateFogColor(fogColor);
             previousFogColor = fogColor;
         }
-
         if (!compareFloats(previousFogStart, fogStart))
         {
             updateFogStart(fogStart);
             previousFogStart = fogStart;
-            Debug.Log("Fog start updated to: " + fogStart);
         }
-
         if (previousUseBasicMaterial != UseBasicMaterial)
         {
             updateUseBasicMaterial(UseBasicMaterial);
             previousUseBasicMaterial = UseBasicMaterial;
         }
-
         if (!equalColors(previousPlaneColor, planeColor))
         {
             updatePlaneColor(planeColor);
             previousPlaneColor = planeColor;
         }
-
         if (!equalColors(previousSlopeColor, slopeColor))
         {
             updateSlopeColor(slopeColor);
             previousSlopeColor = slopeColor;
         }
-
         if (!compareFloats(previousSlopeBias, slopeBias))
         {
             updateSlopeBias(slopeBias);
             previousSlopeBias = slopeBias;
-            Debug.Log("Slope bias updated to: " + slopeBias);
         }
-
         if (!compareFloats(previousSlopeSharpness, slopeSharpness))
         {
             updateSlopeSharpness(slopeSharpness);
             previousSlopeSharpness = slopeSharpness;
-            Debug.Log("Slope sharpness updated to: " + slopeSharpness);
         }
-
         if (!compareFloats(previousSharpness, sharpness))
         {
             updateSharpness(sharpness);
             previousSharpness = sharpness;
-            Debug.Log("Sharpness updated to: " + sharpness);
         }
-
         if (!compareFloats(previousMaxHeight, maxHeight))
         {
             updateMaxHeight(maxHeight);
             previousMaxHeight = maxHeight;
-            Debug.Log("Max height updated to: " + maxHeight);
         }
-
         if (!compareFloats(previousNoiseBias, noiseBias))
         {
             updateNoiseBias(noiseBias);
             previousNoiseBias = noiseBias;
-            Debug.Log("Noise bias updated to: " + noiseBias);
         }
-
-        if (!compareFloats(previousOctaves, octaves))
+        if (seed != previousSeed)
+        {
+            updateSeed(seed);
+            previousSeed = seed;
+        }
+        if (previousOctaves != octaves)
         {
             updateOctaves(octaves);
             previousOctaves = octaves;
-            Debug.Log("Octaves updated to: " + octaves);
         }
-
         if (previousAbsoluteHeight != absoluteHeight)
         {
             updateAbsoluteHeight(absoluteHeight);
             previousAbsoluteHeight = absoluteHeight;
-            Debug.Log("Absolute height updated to: " + absoluteHeight);
+        }
+        if (!AreGradientsApproximatelyEqual(gradient, previousGradient))
+        {
+            updateGradient(gradient);
+            previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
         }
     }
 
@@ -332,7 +290,6 @@ public class chunkGenerator : MonoBehaviour
     private void despawnChunks()
     {
         List<Vector2> chunksToRemove = new List<Vector2>();
-
         foreach (var chunkCoord in chunkObjects.Keys)
         {
             if (Mathf.Abs(chunkCoord.x - refferencePosition.x) > renderRadius ||
@@ -341,7 +298,6 @@ public class chunkGenerator : MonoBehaviour
                 chunksToRemove.Add(chunkCoord);
             }
         }
-
         foreach (var chunkCoord in chunksToRemove)
         {
             if (chunkObjects.TryGetValue(chunkCoord, out GameObject chunkObject))
@@ -353,9 +309,9 @@ public class chunkGenerator : MonoBehaviour
         }
     }
 
-    void Update()
+    private async void SpawnChunks()
     {
-        refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
+        List<Task> spawnTasks = new List<Task>();
 
         for (float i = Mathf.Ceil(refferencePosition.x) - renderRadius; i <= Mathf.Ceil(refferencePosition.x) + renderRadius; i++)
         {
@@ -373,11 +329,16 @@ public class chunkGenerator : MonoBehaviour
                     if (chunk != null)
                     {
                         chunkObjects[chunkCoord] = chunkObject;
-
                         chunk.chunkSize = chunkSize;
                         chunk.chunkScale = chunkScale;
                         chunk.UVscale = UVscale;
                         chunk.perlinScale = perlinScale;
+                        chunk.seed = seed;
+                        chunk.Biomes = Biomes;
+                        chunk.biomeAdjustment = biomeAdjustment;
+                        chunk.maxTemp = maxTemp;
+                        chunk.maxHumidity = maxHumidity;
+                        chunk.biomeScale = biomeScale;
                         chunk.octaves = octaves;
                         chunk.persistence = persistence;
                         chunk.lacunarity = lacunarity;
@@ -386,6 +347,7 @@ public class chunkGenerator : MonoBehaviour
                         chunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
                         chunk.offsetX = offsetX + i * chunkSize * chunkScale;
                         chunk.offsetZ = offsetZ + j * chunkSize * chunkScale;
+                        chunk.gradient = gradient;
                         chunk.amplitude = amplitude;
                         chunk.basicMaterial = basicMaterial;
                         chunk.UseBasicMaterial = UseBasicMaterial;
@@ -399,10 +361,23 @@ public class chunkGenerator : MonoBehaviour
                         chunk.maxHeight = maxHeight;
                         chunk.noiseBias = noiseBias;
                         chunk.absoluteHeight = absoluteHeight;
+                        spawnTasks.Add(chunk.UpdateMeshAsync(cancellationTokenSource.Token));
                     }
                 }
             }
         }
+        await Task.WhenAll(spawnTasks);
+    }
+
+    void OnDisable()
+    {
+        cancellationTokenSource.Cancel();
+    }
+    
+    void Update()
+    {
+        refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
+        SpawnChunks();
         checkForUpdates();
         despawnChunks();
     }
