@@ -38,13 +38,13 @@ public class biomeMap
         }
     }
 
-    public Color getBiomeColor(float temperature, float humidity)
+    public Biome getBiome(float temperature, float humidity)
     {
         int i = Mathf.Clamp(Mathf.RoundToInt(temperature * (gridSize - 1) / maxTemp), 0, gridSize - 1);
         int j = Mathf.Clamp(Mathf.RoundToInt(humidity * (gridSize - 1) / maxHumidity), 0, gridSize - 1);
         Biome biome = biomeGrid[i, j];
         if (biome != null)
-            return biome.Color;
-        return Color.black;
+            return biome;
+        return null;
     }
 }

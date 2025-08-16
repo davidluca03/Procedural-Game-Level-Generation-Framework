@@ -118,7 +118,7 @@ public class biomeGenerator : MonoBehaviour
                 float tempValue = tempNoiseVal * maxTemp;
                 float humidityValue = humidityNoiseVal * maxHumidity;
 
-                colors[index] = biomeMap.getBiomeColor(tempValue, humidityValue);
+                colors[index] = biomeMap.getBiome(tempValue, humidityValue).Color;
             }
         }
 

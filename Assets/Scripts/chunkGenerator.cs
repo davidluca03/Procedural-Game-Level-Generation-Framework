@@ -4,25 +4,20 @@ using System;
 using System.Threading.Tasks;
 using System.Threading;
 
-
 public class chunkGenerator : MonoBehaviour
 {
+    [Header("Chunk Settings")]
     public GameObject chunkPrefab;
     public GameObject refferenceObject;
     public int renderRadius = 5;
     public int chunkSize = 16;
     public float chunkScale = 1;
-    public float UVscale = 1;
-    public float perlinScale = 1.0f;
+
+    [Header("Noise & Perlin Settings")]
     public int seed = 0;
-    public Gradient gradient;
-    public List<Biome> Biomes;
-    public float biomeAdjustment = 1.0f;
-    public float maxTemp = 100.0f;
-    public float maxHumidity = 100.0f;
-    public float biomeScale = 1.0f;
+    public float perlinScale = 1.0f;
     public int octaves = 1;
-    public float persistence = 0.5f;
+    [Range(0f, 1f)] public float persistence = 0.5f;
     public float lacunarity = 2.0f;
     public float frequency = 1.0f;
     public float perlinOffsetX = 0.0f;
@@ -34,14 +29,39 @@ public class chunkGenerator : MonoBehaviour
     public float maxHeight = 1.0f;
     public float noiseBias = 0.0f;
     public bool absoluteHeight = false;
-    public Color fogColor = Color.white;
-    public float fogStart = 0.0f;
+
+    [Header("Biome Settings")]
+    public List<Biome> Biomes;
+    public float biomeAdjustment = 1.0f;
+    public float maxTemp = 100.0f;
+    public float maxHumidity = 100.0f;
+    public float biomeScale = 1.0f;
+    public int biomeColorBlend = 1;
+    public int blendSampleDistance = 1;
+
+    [Header("Material & Visuals")]
     public Material basicMaterial;
     public bool UseBasicMaterial = true;
+    public Gradient gradient;
     public Color planeColor = Color.darkGreen;
     public Color slopeColor = Color.dimGray;
     public float slopeBias = 0.5f;
     public float slopeSharpness = 25.0f;
+
+    [Header("Fog Settings")]
+    public Color fogColor = Color.white;
+    public float fogStart = 0.0f;
+    
+    [Header("UV Settings")]
+    public float UVscale = 1;
+
+    [Header("Water Settings")]
+    public GameObject waterPrefab;
+    public float waterLevel = 0.0f;
+    public float waterUVScale = 1.0f;
+    private Dictionary<Vector2, GameObject> waterObjects = new Dictionary<Vector2, GameObject>();
+    private float previousWaterLevel = 0.0f;
+    private float previousWaterUVScale = 1.0f;
     private bool previousUseBasicMaterial = true;
     private Color previousPlaneColor = Color.darkGreen;
     private Color previousSlopeColor = Color.dimGray;
@@ -91,6 +111,8 @@ public class chunkGenerator : MonoBehaviour
         previousSlopeSharpness = slopeSharpness;
         previousAbsoluteHeight = absoluteHeight;
         previousFogStart = fogStart;
+        previousWaterLevel = waterLevel;
+        previousWaterUVScale = waterUVScale;
         refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
         previousGradient = new Gradient();
         previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
@@ -99,9 +121,9 @@ public class chunkGenerator : MonoBehaviour
 
     private bool equalColors(Color color1, Color color2, float tolerance = 0.01f) {
         return Mathf.Abs(color1.r - color2.r) < tolerance &&
-               Mathf.Abs(color1.g - color2.g) < tolerance &&
-               Mathf.Abs(color1.b - color2.b) < tolerance &&
-               Mathf.Abs(color1.a - color2.a) < tolerance;
+                Mathf.Abs(color1.g - color2.g) < tolerance &&
+                Mathf.Abs(color1.b - color2.b) < tolerance &&
+                Mathf.Abs(color1.a - color2.a) < tolerance;
     }
 
     private bool compareFloats(float a, float b, float tolerance = 0.01f) {
@@ -152,6 +174,17 @@ public class chunkGenerator : MonoBehaviour
         }
     }
 
+    private void UpdateAllWaterChunks(Action<WaterScript> updateAction)
+    {
+        foreach (var waterChunk in waterObjects.Values)
+        {
+            if (waterChunk.TryGetComponent(out WaterScript waterComponent))
+            {
+                updateAction(waterComponent);
+            }
+        }
+    }
+
     private void updateSeed(int newSeed) { UpdateAllChunks(chunk => chunk.updateSeed(newSeed)); }
     private void updateOctaves(int newOctaves) { UpdateAllChunks(chunk => chunk.updateOctaves(newOctaves)); }
     private void updateAmplitude(float newAmplitude) { UpdateAllChunks(chunk => chunk.updateAmplitude(newAmplitude)); }
@@ -172,6 +205,8 @@ public class chunkGenerator : MonoBehaviour
     private void updateNoiseBias(float newNoiseBias) { UpdateAllChunks(chunk => chunk.updateNoiseBias(newNoiseBias)); }
     private void updateAbsoluteHeight(bool newAbsoluteHeight) { UpdateAllChunks(chunk => chunk.updateAbsoluteHeight(newAbsoluteHeight)); }
     private void updateGradient(Gradient newGradient) { UpdateAllChunks(chunk => chunk.updateGradient(newGradient)); }
+    private void updateWaterLevel(float newWaterLevel) { UpdateAllWaterChunks(waterChunk => waterChunk.updateWaterLevel(newWaterLevel)); }
+    private void updateWaterUVScale(float newWaterUVScale) { UpdateAllWaterChunks(waterChunk => waterChunk.waterUVScale = newWaterUVScale); }
 
     private void UpdateAttributesCheck()
     {
@@ -275,6 +310,16 @@ public class chunkGenerator : MonoBehaviour
             updateGradient(gradient);
             previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
         }
+        if (!compareFloats(previousWaterLevel, waterLevel))
+        {
+            updateWaterLevel(waterLevel);
+            previousWaterLevel = waterLevel;
+        }
+        if (!compareFloats(previousWaterUVScale, waterUVScale))
+        {
+            updateWaterUVScale(waterUVScale);
+            previousWaterUVScale = waterUVScale;
+        }
     }
 
     private void checkForUpdates()
@@ -306,6 +351,11 @@ public class chunkGenerator : MonoBehaviour
                 generatedChunks.Remove(chunkCoord);
                 Destroy(chunkObject);
             }
+            if (waterObjects.TryGetValue(chunkCoord, out GameObject waterObject))
+            {
+                waterObjects.Remove(chunkCoord);
+                Destroy(waterObject);
+            }
         }
     }
 
@@ -323,6 +373,7 @@ public class chunkGenerator : MonoBehaviour
                 {
                     generatedChunks.Add(chunkCoord);
                     Vector3 chunkPosition = new Vector3(i * chunkSize * chunkScale, 0, j * chunkSize * chunkScale);
+                    
                     GameObject chunkObject = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity);
                     chunkScript chunk = chunkObject.GetComponent<chunkScript>();
 
@@ -336,6 +387,8 @@ public class chunkGenerator : MonoBehaviour
                         chunk.seed = seed;
                         chunk.Biomes = Biomes;
                         chunk.biomeAdjustment = biomeAdjustment;
+                        chunk.biomeColorBlend = biomeColorBlend;
+                        chunk.blendSampleDistance = blendSampleDistance;
                         chunk.maxTemp = maxTemp;
                         chunk.maxHumidity = maxHumidity;
                         chunk.biomeScale = biomeScale;
@@ -361,7 +414,25 @@ public class chunkGenerator : MonoBehaviour
                         chunk.maxHeight = maxHeight;
                         chunk.noiseBias = noiseBias;
                         chunk.absoluteHeight = absoluteHeight;
+                        chunk.waterLevel = waterLevel;
                         spawnTasks.Add(chunk.UpdateMeshAsync(cancellationTokenSource.Token));
+                    }
+                    
+                    if (waterPrefab != null)
+                    {
+                        GameObject waterObject = Instantiate(waterPrefab, chunkPosition, Quaternion.identity);
+                        WaterScript waterChunk = waterObject.GetComponent<WaterScript>();
+                        
+                        if (waterChunk != null)
+                        {
+                            waterObjects[chunkCoord] = waterObject;
+                            waterChunk.chunkSize = chunkSize;
+                            waterChunk.chunkScale = chunkScale;
+                            waterChunk.waterLevel = waterLevel;
+                            waterChunk.waterUVScale = waterUVScale;
+                            waterChunk.perlinOffsetX = perlinOffsetX + i * chunkSize;
+                            waterChunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
+                        }
                     }
                 }
             }

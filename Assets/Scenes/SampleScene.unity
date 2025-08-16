@@ -426,6 +426,57 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!1 &574743508
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 574743510}
+  - component: {fileID: 574743509}
+  m_Layer: 0
+  m_Name: Water
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &574743509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574743508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57a003e5196a743418998129a1fd03fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waterLevel: 0
+  waterMaterial: {fileID: -876546973899608171, guid: d665278cf26d50e469344191d1772538, type: 3}
+  chunkSize: 16
+  chunkScale: 1
+  waterUVScale: 1
+  perlinOffsetX: 0
+  perlinOffsetZ: 0
+--- !u!4 &574743510
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574743508}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1024742667}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &721711614
 GameObject:
   m_ObjectHideFlags: 0
@@ -456,83 +507,109 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   biomes:
-  - Name: Jungle
+  - name: 
     Color: {r: 0.51995873, g: 0.6886792, b: 0.09420614, a: 0}
     minTemp: 60
     maxTemp: 100
     minHumidity: 60
     maxHumidity: 100
-    perlinScale: 0
-  - Name: Snowy Tundra
+    objects: []
+  - name: 
     Color: {r: 1, g: 1, b: 1, a: 1}
     minTemp: 0
     maxTemp: 20
     minHumidity: 0
     maxHumidity: 60
-    perlinScale: 0
-  - Name: Plains
+    objects: []
+  - name: 
     Color: {r: 0.591851, g: 0.7735849, b: 0.26637593, a: 0}
     minTemp: 20
     maxTemp: 60
     minHumidity: 0
     maxHumidity: 40
-    perlinScale: 0
-  - Name: Savanna
+    objects: []
+  - name: 
     Color: {r: 0.6025978, g: 0.6037736, b: 0.36169454, a: 0}
     minTemp: 60
     maxTemp: 80
     minHumidity: 0
     maxHumidity: 40
-    perlinScale: 0
-  - Name: Dessert
+    objects: []
+  - name: 
     Color: {r: 1, g: 0.6135602, b: 0, a: 0}
     minTemp: 80
     maxTemp: 100
     minHumidity: 0
     maxHumidity: 60
-    perlinScale: 0
-  - Name: Forest
+    objects: []
+  - name: 
     Color: {r: 0.014017452, g: 0.4245283, b: 0.067713544, a: 0}
     minTemp: 20
     maxTemp: 80
     minHumidity: 40
     maxHumidity: 60
-    perlinScale: 0
-  - Name: Snowy Taiga
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 1
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.3
+  - name: 
     Color: {r: 0.09834461, g: 0.3207547, b: 0.22179756, a: 0}
     minTemp: 0
     maxTemp: 20
     minHumidity: 40
     maxHumidity: 100
-    perlinScale: 0
-  - Name: Giant Spruce Taiga
+    objects: []
+  - name: 
     Color: {r: 0.31955323, g: 0.4056604, b: 0.34848502, a: 0}
     minTemp: 20
     maxTemp: 40
     minHumidity: 80
     maxHumidity: 100
-    perlinScale: 0
-  - Name: Dark Forest
+    objects: []
+  - name: 
     Color: {r: 0.0685543, g: 0.09433961, b: 0, a: 0}
     minTemp: 40
     maxTemp: 60
     minHumidity: 80
     maxHumidity: 100
-    perlinScale: 0
-  - Name: Birch Forest
+    objects: []
+  - name: 
     Color: {r: 0.21933961, g: 0.5, b: 0.32680112, a: 0}
     minTemp: 40
     maxTemp: 60
     minHumidity: 60
     maxHumidity: 80
-    perlinScale: 0
-  - Name: Taiga
+    objects: []
+  - name: 
     Color: {r: 0.044010334, g: 0.4056604, b: 0.31258106, a: 0}
     minTemp: 20
     maxTemp: 40
     minHumidity: 60
     maxHumidity: 80
-    perlinScale: 0
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 1
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.3
   maxTemp: 100
   maxHumidity: 100
   size: 200
@@ -640,25 +717,266 @@ MonoBehaviour:
   renderRadius: 10
   chunkSize: 64
   chunkScale: 0.25
-  UVscale: 1
+  seed: 900
   perlinScale: 45
-  seed: 0
+  octaves: 6
+  persistence: 0.3
+  lacunarity: 2.8
+  frequency: 0.05
+  perlinOffsetX: 0
+  perlinOffsetZ: 0
+  offsetX: 0
+  offsetZ: 0
+  amplitude: 109
+  sharpness: 3
+  maxHeight: 1
+  noiseBias: 0
+  absoluteHeight: 0
+  Biomes:
+  - name: 
+    Color: {r: 0.019279927, g: 0.05660379, b: 0, a: 0}
+    minTemp: 60
+    maxTemp: 100
+    minHumidity: 60
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 188006, guid: c6b7fb383a3534b039692b5485b6e739, type: 3}
+      minScale: 3
+      maxScale: 4
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 1
+      spawnChance: 0.15
+  - name: 
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    minTemp: 0
+    maxTemp: 20
+    minHumidity: 0
+    maxHumidity: 60
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.14443813, g: 0.3301887, b: 0.0140174385, a: 0}
+    minTemp: 20
+    maxTemp: 60
+    minHumidity: 0
+    maxHumidity: 40
+    objects:
+    - obj: {fileID: 191266, guid: 1bf7a8a1b5f28c141a0a0b82f48eee81, type: 3}
+      minScale: 1.2
+      maxScale: 1.5
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 1
+      spawnChance: 0.02
+  - name: 
+    Color: {r: 0.6025978, g: 0.6037736, b: 0.36169454, a: 0}
+    minTemp: 60
+    maxTemp: 80
+    minHumidity: 0
+    maxHumidity: 40
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 1, g: 0.6313726, b: 0, a: 0}
+    minTemp: 80
+    maxTemp: 100
+    minHumidity: 0
+    maxHumidity: 60
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 20
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.014017452, g: 0.4245283, b: 0.067713544, a: 0}
+    minTemp: 20
+    maxTemp: 80
+    minHumidity: 40
+    maxHumidity: 60
+    objects:
+    - obj: {fileID: 191266, guid: c44bd9bdc114d4a60932c0087d9d1732, type: 3}
+      minScale: 0.6
+      maxScale: 1.3
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 1
+      spawnChance: 0.3
+  - name: 
+    Color: {r: 0.09834461, g: 0.3207547, b: 0.22179756, a: 0}
+    minTemp: 0
+    maxTemp: 20
+    minHumidity: 40
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 10
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.31955323, g: 0.4056604, b: 0.34848502, a: 0}
+    minTemp: 20
+    maxTemp: 40
+    minHumidity: 80
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 1
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.0685543, g: 0.09433961, b: 0, a: 0}
+    minTemp: 40
+    maxTemp: 60
+    minHumidity: 80
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 1
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.21933961, g: 0.5, b: 0.32680112, a: 0}
+    minTemp: 40
+    maxTemp: 60
+    minHumidity: 60
+    maxHumidity: 80
+    objects:
+    - obj: {fileID: 5004745960819478878, guid: ec5cbd988852c8a4d8ef251b5a6c4ecc, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 0
+      minDistance: 1
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 90
+      randomSpawn: 1
+      spawnChance: 0.05
+  - name: 
+    Color: {r: 0.044010334, g: 0.4056604, b: 0.31258106, a: 0}
+    minTemp: 20
+    maxTemp: 40
+    minHumidity: 60
+    maxHumidity: 80
+    objects:
+    - obj: {fileID: 192044, guid: 19682540d8a014522a319b1cf788aee2, type: 3}
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 5
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 40
+      randomSpawn: 1
+      spawnChance: 0.1
+  biomeAdjustment: 0.6
+  maxTemp: 100
+  maxHumidity: 100
+  biomeScale: 30000
+  biomeColorBlend: 4
+  blendSampleDistance: 32
+  basicMaterial: {fileID: -876546973899608171, guid: 39036748944d9e249b5d8008938b357b, type: 3}
+  UseBasicMaterial: 1
   gradient:
     serializedVersion: 2
-    key0: {r: 0, g: 1, b: 0.99020815, a: 1}
-    key1: {r: 1, g: 0.97704625, b: 0.5330188, a: 1}
-    key2: {r: 0, g: 1, b: 0.3122611, a: 0}
-    key3: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 0}
-    key4: {r: 0.23529413, g: 0.23529413, b: 0.23529413, a: 0}
-    key5: {r: 1, g: 1, b: 1, a: 0}
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 13300
-    ctime2: 26600
-    ctime3: 42405
-    ctime4: 55512
-    ctime5: 64957
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
     ctime6: 0
     ctime7: 0
     atime0: 0
@@ -671,48 +989,18 @@ MonoBehaviour:
     atime7: 0
     m_Mode: 0
     m_ColorSpace: -1
-    m_NumColorKeys: 6
+    m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  Biomes:
-  - Name: Blue
-    Color: {r: 0, g: 1, b: 0.8065431, a: 0}
-    minTemp: 0
-    maxTemp: 50
-    minHumidity: 0
-    maxHumidity: 100
-    perlinScale: 0
-  - Name: Red
-    Color: {r: 1, g: 0, b: 0.030305386, a: 0}
-    minTemp: 50
-    maxTemp: 100
-    minHumidity: 0
-    maxHumidity: 100
-    perlinScale: 0
-  biomeAdjustment: 1
-  maxTemp: 100
-  maxHumidity: 100
-  biomeScale: 1000
-  octaves: 8
-  persistence: 0.3
-  lacunarity: 3.2
-  frequency: 0.05
-  perlinOffsetX: 0
-  perlinOffsetZ: 0
-  offsetX: 0
-  offsetZ: 0
-  amplitude: 200
-  sharpness: 3
-  maxHeight: 1
-  noiseBias: 0.6
-  absoluteHeight: 0
-  fogColor: {r: 0.7019608, g: 1, b: 1, a: 1}
-  fogStart: 0
-  basicMaterial: {fileID: -876546973899608171, guid: 39036748944d9e249b5d8008938b357b, type: 3}
-  UseBasicMaterial: 1
-  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
-  slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
-  slopeBias: 0.5
+  planeColor: {r: 0, g: 1, b: 0, a: 1}
+  slopeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  slopeBias: 0.13
   slopeSharpness: 25
+  fogColor: {r: 1, g: 1, b: 1, a: 1}
+  fogStart: 0
+  UVscale: 1
+  waterPrefab: {fileID: 574743508}
+  waterLevel: -100
+  waterUVScale: 0.05
 --- !u!4 &1024742667
 Transform:
   m_ObjectHideFlags: 0
@@ -727,6 +1015,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1758270365}
+  - {fileID: 574743510}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1412969978
@@ -792,7 +1081,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: -876546973899608171, guid: d665278cf26d50e469344191d1772538, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -882,6 +1171,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   seed: 0
+  biomeColorBlend: 0
+  blendSampleDistance: 0
   biomeScale: 1
   biomeAdjustment: 1
   maxTemp: 100
@@ -890,8 +1181,8 @@ MonoBehaviour:
   chunkSize: 0
   chunkScale: 0.5
   UVscale: 1
-  perlinScale: 60
-  octaves: 8
+  perlinScale: 1
+  octaves: 1
   persistence: 0.5
   lacunarity: 2
   frequency: 1
@@ -899,7 +1190,7 @@ MonoBehaviour:
   perlinOffsetZ: 0
   offsetX: 0
   offsetZ: 0
-  amplitude: 100
+  amplitude: 1
   sharpness: 1
   maxHeight: 1
   noiseBias: 0
@@ -936,12 +1227,13 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
-  slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
+  planeColor: {r: 0, g: 1, b: 0, a: 1}
+  slopeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   slopeBias: 0.5
   slopeSharpness: 25
   fogColor: {r: 1, g: 1, b: 1, a: 1}
   fogStart: 0
+  waterLevel: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
