@@ -23,7 +23,6 @@ public class cameraMovement : MonoBehaviour
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-            Debug.Log("Camera Control Enabled");
 
             lookInput = lookAction.action.ReadValue<Vector2>();
             lookInput.y = Mathf.Clamp(lookInput.y, -90f, 90f);

@@ -44,7 +44,10 @@ public class biomeMap
         int j = Mathf.Clamp(Mathf.RoundToInt(humidity * (gridSize - 1) / maxHumidity), 0, gridSize - 1);
         Biome biome = biomeGrid[i, j];
         if (biome != null)
+        {
             return biome;
+        }
+
         return null;
     }
 }

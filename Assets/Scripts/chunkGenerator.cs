@@ -32,6 +32,7 @@ public class chunkGenerator : MonoBehaviour
 
     [Header("Biome Settings")]
     public List<Biome> Biomes;
+    public Biome underWaterBiome;
     public float biomeAdjustment = 1.0f;
     public float maxTemp = 100.0f;
     public float maxHumidity = 100.0f;
@@ -165,8 +166,15 @@ public class chunkGenerator : MonoBehaviour
 
     private void UpdateAllChunks(Action<chunkScript> updateAction)
     {
-        foreach (var chunk in chunkObjects.Values)
+        List<GameObject> chunksToUpdate = new List<GameObject>(chunkObjects.Values);
+        foreach (var chunk in chunksToUpdate)
         {
+            // Adaugă această verificare pentru a te asigura că GameObject-ul nu este nul.
+            if (chunk == null)
+            {
+                continue; 
+            }
+
             if (chunk.TryGetComponent(out chunkScript chunkComponent))
             {
                 updateAction(chunkComponent);
@@ -176,8 +184,14 @@ public class chunkGenerator : MonoBehaviour
 
     private void UpdateAllWaterChunks(Action<WaterScript> updateAction)
     {
-        foreach (var waterChunk in waterObjects.Values)
+        List<GameObject> waterChunksToUpdate = new List<GameObject>(waterObjects.Values);
+        foreach (var waterChunk in waterChunksToUpdate)
         {
+            if (waterChunk == null)
+            {
+                continue;
+            }
+
             if (waterChunk.TryGetComponent(out WaterScript waterComponent))
             {
                 updateAction(waterComponent);
@@ -343,6 +357,14 @@ public class chunkGenerator : MonoBehaviour
                 chunksToRemove.Add(chunkCoord);
             }
         }
+        
+        // ANULEAZĂ TOATE SARCINILE CURENTE ÎNAINTE DE A LE DISTRUGE
+        if (chunksToRemove.Count > 0)
+        {
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource = new CancellationTokenSource();
+        }
+        
         foreach (var chunkCoord in chunksToRemove)
         {
             if (chunkObjects.TryGetValue(chunkCoord, out GameObject chunkObject))
@@ -392,6 +414,7 @@ public class chunkGenerator : MonoBehaviour
                         chunk.maxTemp = maxTemp;
                         chunk.maxHumidity = maxHumidity;
                         chunk.biomeScale = biomeScale;
+                        chunk.underWaterBiome = underWaterBiome;
                         chunk.octaves = octaves;
                         chunk.persistence = persistence;
                         chunk.lacunarity = lacunarity;
