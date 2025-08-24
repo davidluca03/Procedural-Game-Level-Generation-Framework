@@ -3,17 +3,20 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
+using System.Linq;
+using System;
 
 [System.Serializable]
 public class spawnableObject
 {
     public GameObject obj;
     public int seedOffset = 0;
+    public float positionOffset = 0.0f;
     public float minScale = 1.0f;
     public float maxScale = 1.0f;
     public float minRotation = 0.0f;
     public float maxRotation = 0.0f;
-    public int minDistance = 1;
+    public float minDistance = 1.0f;
     public bool heightCondition = false;
     public float minHeight, maxHeight = 0.0f;
     public float heightBlendSize = 0.0f;
@@ -26,8 +29,8 @@ public class spawnableObject
     public float noiseHardTreshold = 0.0f;
     public float noiseScale = 1.0f;
     public bool invertNoise = false;
+    public bool ignoreCollisions = false;
     private FBM_Noise noise = null;
-    private System.Random r = null;
 
     private float GetLinearChance(float value, float hardTreshold, float softTreshold)
     {
@@ -45,11 +48,7 @@ public class spawnableObject
         Vector3 objDistance = new Vector3(x, y, z);
         float totalChance = 1.0f;
 
-        if (r == null)
-        {
-            int hashSeed = seed + Mathf.RoundToInt(x) * 101 + Mathf.RoundToInt(y) * 103 + Mathf.RoundToInt(z) * 107 + seedOffset;
-            r = new System.Random(hashSeed);
-        }
+        int hashSeed = seed + Mathf.RoundToInt(x) * 101 + Mathf.RoundToInt(z) * 107 + seedOffset;
         
         if (maxSlopeCondition)
         {
@@ -89,7 +88,7 @@ public class spawnableObject
         {
             if (noise == null)
             {
-                noise = new FBM_Noise(seed + seedOffset, 1.0f, 0.5f, 1.0f, 2.0f, 4);
+                noise = new FBM_Noise(hashSeed, 1.0f, 0.5f, 1.0f, 2.0f, 4);
             }
 
             float noiseValue = noise.FBM_NoiseValue(x / noiseScale, z / noiseScale);
@@ -100,9 +99,17 @@ public class spawnableObject
             totalChance *= GetLinearChance(noiseValue, noiseHardTreshold, noiseSoftTreshold);
         }
 
-        if (totalChance <= (float)r.NextDouble())
+        if (totalChance <= DeterministicHash(hashSeed + 9))
             return false;
 
         return true;
+    }
+
+    private float DeterministicHash(int seed) {
+        uint x = (uint)seed;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x / 4294967296.0f;
     }
 }

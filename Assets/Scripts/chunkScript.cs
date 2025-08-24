@@ -6,6 +6,12 @@ using UnityEngine;
 using Unity.Collections;
 using System.Xml.Serialization;
 using Unity.VisualScripting;
+using Unity.Multiplayer.Center.Common;
+using System.Reflection;
+using UnityEngine.InputSystem;
+using UnityEditor;
+using UnityEngine.UIElements;
+using System.Linq;
 
 public struct MeshData
 {
@@ -33,6 +39,8 @@ public class chunkScript : MonoBehaviour
 {
     public int seed;
     private biomeMap biomeMap;
+    private biomeMap underWaterBiomeMap;
+    private biomeMap highLandsBiomeMap;
     public int biomeColorBlend = 0;
     public int blendSampleDistance = 0;
     public float biomeScale = 1.0f;
@@ -40,6 +48,9 @@ public class chunkScript : MonoBehaviour
     public float maxTemp = 100.0f;
     public float maxHumidity = 100.0f;
     public List<Biome> Biomes;
+    public List<Biome> underWaterBiomes;
+    public List<Biome> highlandsBiomes;
+    public float highLandsTreshold = 100000.0f;
     public int chunkSize = 16;
     public float chunkScale = 1;
     public float UVscale = 1;
@@ -58,16 +69,14 @@ public class chunkScript : MonoBehaviour
     public float noiseBias = 0.0f;
     public bool absoluteHeight = false;
     public Material basicMaterial;
-    public bool UseBasicMaterial = true;
-    public Gradient gradient;
-    public Color planeColor = Color.darkGreen;
     public Color slopeColor = Color.dimGray;
     public float slopeBias = 0.5f;
     public float slopeSharpness = 25.0f;
     public Color fogColor = Color.white;
     public float fogStart = 0.0f;
     public float waterLevel = 0.0f;
-    public Biome underWaterBiome;
+    public float objectRenderDistance = 0;
+    public Dictionary<string, GPUInstanceData> GPUInstances;
     private Renderer objectRenderer;
     private float[,] heightMap;
     private Dictionary<Color, float>[,] biomeColorMap;
@@ -76,8 +85,12 @@ public class chunkScript : MonoBehaviour
     private FBM_Noise tempNoise;
     private FBM_Noise humidityNoise;
     private CancellationTokenSource cancellationTokenSource;
-    private List<GameObject> objectList;
-    private Dictionary<string, GPUInstanceData> GPUInstances;
+    private float objectsPerChunk = 0.0f;
+    private Mesh mesh;
+    private bool addedObjects = false;
+    private System.Random rng;
+    private List<chunkGenerator.PositionData> localInstanceRegistry = new List<chunkGenerator.PositionData>();
+
 
     private void OnEnable()
     {
@@ -93,6 +106,15 @@ public class chunkScript : MonoBehaviour
         }
     }
 
+    public void removeObjects()
+    {
+        if (GPUInstances != null)
+            GPUInstances.Clear();
+
+        localInstanceRegistry.Clear();
+        addedObjects = false;
+    }
+
     private void OnDestroy()
     {
         MeshFilter meshFilter = GetComponent<MeshFilter>();
@@ -102,16 +124,8 @@ public class chunkScript : MonoBehaviour
             meshFilter.mesh = null;
         }
 
-        if (objectList != null)
-        {
-            foreach (GameObject obj in objectList)
-            {
-                if (obj != null)
-                {
-                    Destroy(obj);
-                }
-            }
-        }
+        if (GPUInstances != null)
+            GPUInstances.Clear();
     }
 
     public async Task UpdateMeshAsync(CancellationToken cancellationToken)
@@ -124,13 +138,14 @@ public class chunkScript : MonoBehaviour
             return;
         }
 
-        System.Random r = new System.Random(seed);
-        int tempSeed = r.Next();
-        int humditySeed = r.Next();
+        rng = new System.Random(seed);
+        int tempSeed = rng.Next();
+        int humditySeed = rng.Next();
         tempNoise = new FBM_Noise(tempSeed, 1f, 0.5f, 2f, 3f, 4);
         humidityNoise = new FBM_Noise(humditySeed, 1f, 0.5f, 2f, 3f, 4);
         biomeMap = new biomeMap(maxTemp, maxHumidity, Biomes);
-
+        underWaterBiomeMap = new biomeMap(maxTemp, maxHumidity, underWaterBiomes);
+        highLandsBiomeMap = new biomeMap(maxTemp, maxHumidity, highlandsBiomes);
         MeshData meshData = await Task.Run(() => GenerateMeshData());
 
         if (cancellationToken.IsCancellationRequested)
@@ -173,7 +188,10 @@ public class chunkScript : MonoBehaviour
         if (meshFilter == null)
             meshFilter = gameObject.AddComponent<MeshFilter>();
 
-        Mesh mesh = new Mesh();
+        if (mesh != null)
+            mesh.Clear();
+
+        mesh = new Mesh();
         mesh.vertices = data.vertices;
         mesh.triangles = data.triangles;
         mesh.uv = data.uvs;
@@ -185,7 +203,198 @@ public class chunkScript : MonoBehaviour
             Destroy(meshFilter.mesh);
         }
         meshFilter.mesh = mesh;
-        spawnObjects(chunkSize, mesh.vertices, mesh.normals);
+        
+    }
+
+    public async void addObjects()
+    {
+        if (addedObjects == false && mesh != null)
+        {
+            addedObjects = true;
+            var biomesCopy = new List<Biome>(Biomes);
+
+            var localMeshKeys = new Dictionary<string, (Mesh mesh, Material material, spawnableObject obj)>();
+            foreach (Biome biome in biomesCopy)
+            {
+                foreach (var obj in biome.objects)
+                {
+                    MeshFilter mf = obj.obj.GetComponent<MeshFilter>();
+                    MeshRenderer mr = obj.obj.GetComponent<MeshRenderer>();
+                    Mesh mesh = mf.sharedMesh;
+                    Material material = mr.sharedMaterial;
+                    string key = mesh.name + "_" + material.name;
+                    
+                    if (!localMeshKeys.ContainsKey(key))
+                    {
+                        localMeshKeys.Add(key, (mesh, material, obj));
+                    }
+                }
+            }
+
+            var waterBiomesCopy = new List<Biome>(underWaterBiomes);
+            foreach (Biome waterBiome in waterBiomesCopy)
+            {
+                foreach (var obj in waterBiome.objects)
+                {
+                    MeshFilter mf = obj.obj.GetComponent<MeshFilter>();
+                    MeshRenderer mr = obj.obj.GetComponent<MeshRenderer>();
+                    Mesh mesh = mf.sharedMesh;
+                    Material material = mr.sharedMaterial;
+                    string key = mesh.name + "_" + material.name;
+
+                    if (!localMeshKeys.ContainsKey(key))
+                    {
+                        localMeshKeys.Add(key, (mesh, material, obj));
+                    }
+                }
+            }
+
+            var highLandsBiomesCopy = new List<Biome>(highlandsBiomes);
+            foreach (Biome highLandsBiome in highLandsBiomesCopy)
+            {
+                foreach (var obj in highLandsBiome.objects)
+                {
+                    MeshFilter mf = obj.obj.GetComponent<MeshFilter>();
+                    MeshRenderer mr = obj.obj.GetComponent<MeshRenderer>();
+                    Mesh mesh = mf.sharedMesh;
+                    Material material = mr.sharedMaterial;
+                    string key = mesh.name + "_" + material.name;
+
+                    if (!localMeshKeys.ContainsKey(key))
+                    {
+                        localMeshKeys.Add(key, (mesh, material, obj));
+                    }
+                }
+            }
+            
+            Vector3[] normals = mesh.normals.ToArray();
+            Dictionary<string, List<(Matrix4x4 matrix, Vector3 normal)>> objectTransforms = await Task.Run(() => generateTransforms(chunkSize, normals, localMeshKeys));
+            Dictionary<string, List<Matrix4x4>> validObjects = new Dictionary<string, List<Matrix4x4>>();
+
+            foreach (var meshKey in localMeshKeys.Keys)
+            {
+                string key = meshKey;
+                if (objectTransforms.TryGetValue(key, out List<(Matrix4x4 matrix, Vector3 normal)> transforms))
+                {
+                    spawnableObject randomObject = localMeshKeys[meshKey].obj;
+                    foreach (var (matrix, normal) in transforms)
+                    {
+                        Vector3 spawnPos = matrix.GetColumn(3);
+                        if (randomObject.confirmSpawn(spawnPos.x, spawnPos.y, spawnPos.z, normal, seed))
+                        {
+                            if (randomObject.ignoreCollisions || IsSpaceAvailableLocal(spawnPos, randomObject.minDistance))
+                            {
+                                if (!validObjects.ContainsKey(key))
+                                {
+                                    validObjects.Add(key, new List<Matrix4x4>());
+                                }
+                                validObjects[key].Add(matrix);
+
+                                if (!randomObject.ignoreCollisions)
+                                    localInstanceRegistry.Add(new chunkGenerator.PositionData { position = spawnPos, restrictionRadius = randomObject.minDistance });
+                            }
+                        }
+                    }
+                }
+            }
+            GPUInstances = await Task.Run(() => bindMeshToTransforms(validObjects, localMeshKeys));
+        }
+    }
+
+    private bool IsSpaceAvailableLocal(Vector3 position, float radius)
+    {
+        foreach (var obj in localInstanceRegistry)
+        {
+            if (Vector3.Distance(obj.position, position) < obj.restrictionRadius + radius)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    public Dictionary<string, GPUInstanceData> bindMeshToTransforms(Dictionary<string, List<Matrix4x4>> validObjects, Dictionary<string, (Mesh mesh, Material material, spawnableObject obj)> meshKeys)
+    {
+        Dictionary<string, GPUInstanceData> result = new Dictionary<string, GPUInstanceData>();
+
+        foreach (var meshKey in meshKeys.Keys)
+        {
+            if (validObjects.ContainsKey(meshKey))
+            {
+                result.Add(meshKey, new GPUInstanceData(meshKeys[meshKey].mesh, meshKeys[meshKey].material, validObjects[meshKey]));
+            }
+        }
+
+        return result;
+    }
+    private Dictionary<string, List<(Matrix4x4 matrix, Vector3 normal)>> generateTransforms(int size, Vector3[] normals, Dictionary<string, (Mesh mesh, Material material, spawnableObject obj)> meshKeys)
+    {
+        Dictionary<string, List<(Matrix4x4 matrix, Vector3 normal)>> result = new Dictionary<string, List<(Matrix4x4 matrix, Vector3 normal)>>();
+
+        if (GPUInstances == null)
+        {
+            GPUInstances = new Dictionary<string, GPUInstanceData>();
+        }
+        else
+        {
+            GPUInstances.Clear();
+        }
+
+        int hashSeed = seed + Mathf.RoundToInt(offsetX * 101) + Mathf.RoundToInt(offsetZ * 107);
+        
+        for (int i = 0; i < objectsPerChunk; i++)
+        {
+            float randomX = DeterministicHash(hashSeed + i * 2) * size;
+            float randomZ = DeterministicHash(hashSeed + i * 3) * size;
+
+            int xIdx = Mathf.FloorToInt(randomX);
+            int zIdx = Mathf.FloorToInt(randomZ);
+
+            xIdx = Mathf.Clamp(xIdx, 0, size);
+            zIdx = Mathf.Clamp(zIdx, 0, size);
+
+            List<spawnableObject> biomeObjectList = biomeGrid[xIdx, zIdx].sortObjects();
+            if (biomeObjectList == null || biomeObjectList.Count == 0)
+            {
+                continue;
+            }
+
+            spawnableObject randomObject = biomeObjectList[(int)Math.Floor(DeterministicHash(hashSeed + i * 4) * biomeObjectList.Count)];
+            if (randomObject == null || randomObject.obj == null)
+            {
+                continue;
+            }
+
+            float y = heightMap[xIdx, zIdx];
+            Vector3 spawnPos = new Vector3((randomX - (float)size / 2) * chunkScale + offsetX * chunkSize * chunkScale, y, (randomZ - (float)size / 2) * chunkScale + offsetZ * chunkSize * chunkScale);
+            string meshKey = meshKeys.FirstOrDefault(x => x.Value.obj == randomObject).Key;
+
+            if (string.IsNullOrEmpty(meshKey)) {
+                continue;
+            }
+
+            if (!result.ContainsKey(meshKey))
+            {
+                result.Add(meshKey, new List<(Matrix4x4, Vector3)>());
+            }
+
+            Vector3 displacement = Vector3.Normalize(new Vector3(DeterministicHash(hashSeed + i * 5) * 2 - 1, 0, DeterministicHash(hashSeed + i * 6) * 2 - 1)) * randomObject.positionOffset;
+            spawnPos += displacement;
+
+            float randomScaleVal = DeterministicHash(hashSeed + i * 7);
+            float scale = (randomObject.maxScale - randomObject.minScale) * randomScaleVal + randomObject.minScale;
+            Vector3 randomScale = new Vector3(scale, scale, scale);
+
+            float randomRotationVal = DeterministicHash(hashSeed + i * 8);
+            float rotation = (randomObject.maxRotation - randomObject.minRotation) * randomRotationVal + randomObject.minRotation;
+            Quaternion randomRotation = Quaternion.Euler(0, rotation, 0);
+
+            Vector3 normal = normals[xIdx * size + zIdx];
+
+            result[meshKey].Add((Matrix4x4.TRS(spawnPos, randomRotation, randomScale), normal));
+        }
+        return result;
     }
 
     private void UpdateMaterialProperties()
@@ -204,21 +413,14 @@ public class chunkScript : MonoBehaviour
         {
             objectRenderer.sharedMaterial.SetColor("_fogColor", fogColor);
             objectRenderer.sharedMaterial.SetFloat("_fogStart", fogStart);
-            if (UseBasicMaterial)
-            {
-                objectRenderer.sharedMaterial.SetColor("_planeColor", planeColor);
-                objectRenderer.sharedMaterial.SetColor("_slopeColor", slopeColor);
-                objectRenderer.sharedMaterial.SetFloat("_slopeBias", slopeBias);
-                objectRenderer.sharedMaterial.SetFloat("_slopeSharpness", slopeSharpness);
-            }
+            
+            objectRenderer.sharedMaterial.SetColor("_slopeColor", slopeColor);
+            objectRenderer.sharedMaterial.SetFloat("_slopeBias", slopeBias);
+            objectRenderer.sharedMaterial.SetFloat("_slopeSharpness", slopeSharpness);
         }
     }
 
-    public void updateSeed(int newSeed)
-    {
-        seed = newSeed;
-        RequestMeshUpdate();
-    }
+    public void updateSeed(int newSeed) { seed = newSeed; RequestMeshUpdate(); }
     public void updateOctaves(int newOctaves) { octaves = newOctaves; RequestMeshUpdate(); }
     public void updateAmplitude(float newAmplitude) { amplitude = newAmplitude; RequestMeshUpdate(); }
     public void updatePersistence(float newPersistence) { persistence = newPersistence; RequestMeshUpdate(); }
@@ -230,11 +432,8 @@ public class chunkScript : MonoBehaviour
     public void updateMaxHeight(float newMaxHeight) { maxHeight = newMaxHeight; RequestMeshUpdate(); }
     public void updateAbsoluteHeight(bool newAbsoluteHeight) { absoluteHeight = newAbsoluteHeight; RequestMeshUpdate(); }
     public void updateNoiseBias(float newNoiseBias) { noiseBias = newNoiseBias; RequestMeshUpdate(); }
-    public void updateGradient(Gradient newGradient) { gradient = newGradient; RequestMeshUpdate(); }
     public void updateFogColor(Color newFogColor) { fogColor = newFogColor; UpdateMaterialProperties(); }
     public void updateFogStart(float newFogStart) { fogStart = newFogStart; UpdateMaterialProperties(); }
-    public void updateUsingBasicMaterial(bool newUseBasicMaterial) { UseBasicMaterial = newUseBasicMaterial; UpdateMaterialProperties(); }
-    public void updatePlaneColor(Color newPlaneColor) { planeColor = newPlaneColor; UpdateMaterialProperties(); }
     public void updateSlopeColor(Color newSlopeColor) { slopeColor = newSlopeColor; UpdateMaterialProperties(); }
     public void updateSlopeBias(float newSlopeBias) { slopeBias = newSlopeBias; UpdateMaterialProperties(); }
     public void updateSlopeSharpness(float newSlopeSharpness) { slopeSharpness = newSlopeSharpness; UpdateMaterialProperties(); }
@@ -282,7 +481,7 @@ public class chunkScript : MonoBehaviour
                 int index = x * (size + 1) + z;
                 float sampleX = (x + perlinOffsetX) / perlinScale;
                 float sampleZ = (z + perlinOffsetZ) / perlinScale;
-                float y_value = noise.FBM_NoiseValue(sampleX, sampleZ, false) * amplitude;
+                float y_value = noise.FBM_NoiseValue(sampleX, sampleZ) * amplitude;
                 heightMap[x, z] = y_value;
                 vertices[index] = new Vector3((x - (float)size / 2) * scale, y_value, (z - (float)size / 2) * scale);
             }
@@ -326,77 +525,7 @@ public class chunkScript : MonoBehaviour
         }
         return uvs;
     }
-
-    private void spawnObjects(int size, Vector3[] vertices, Vector3[] normals)
-    {
-        if (objectList == null)
-        {
-            objectList = new List<GameObject>();
-        }
-        else
-        {
-            foreach (GameObject oldObj in objectList)
-            {
-                if (oldObj != null)
-                {
-                    Destroy(oldObj);
-                }
-            }
-            objectList.Clear();
-        }
-
-        if (GPUInstances == null)
-        {
-            GPUInstances = new Dictionary<string, GPUInstanceData>();
-        }
-
-        for (int x = 0; x <= size; x++)
-        {
-            for (int z = 0; z <= size; z++)
-            {
-                Vector3 spawnPos = vertices[x * (size + 1) + z] + this.transform.position;
-                List<spawnableObject> biomeObjectList = biomeGrid[x, z].objects;
-
-                if (biomeObjectList != null)
-                {
-                    foreach (spawnableObject obj in biomeObjectList)
-                    {
-                        if (obj != null && obj.obj != null)
-                        {
-                            if (obj.confirmSpawn(
-                                this.transform.position.x + spawnPos.x,
-                                this.transform.position.y + spawnPos.y,
-                                this.transform.position.z + spawnPos.z,
-                                normals[x * (size + 1) + z],
-                                seed) &&
-                                x % obj.minDistance == 0 && z % obj.minDistance == 0)
-                            {
-                                MeshFilter mf = obj.obj.GetComponent<MeshFilter>();
-                                MeshRenderer mr = obj.obj.GetComponent<MeshRenderer>();
-
-                                Mesh mesh = mf.sharedMesh;
-                                Material material = mr.sharedMaterial;
-
-                                String key = mesh.name + "_" + material.name;
-
-                                if (!GPUInstances.ContainsKey(key))
-                                {
-                                    GPUInstances[key] = new GPUInstanceData(mesh, material, new List<Matrix4x4>());
-                                }
-
-                                float scale = UnityEngine.Random.Range(obj.minScale, obj.maxScale);
-                                Vector3 randomScale = new Vector3(scale, scale, scale);
-                                Quaternion randomRotation = Quaternion.Euler(0, UnityEngine.Random.Range(obj.minRotation, obj.maxRotation), 0);
-
-                                GPUInstances[key].matrices.Add(Matrix4x4.TRS(spawnPos, randomRotation, randomScale));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+    
     float Adjust(float noise, float adjustment)
     {
         noise = noise * 2 - 1;
@@ -413,6 +542,8 @@ public class chunkScript : MonoBehaviour
 
         float blendArea = Mathf.Pow(2 * biomeColorBlend + 1, 2);
         float weight = 1.0f / blendArea;
+
+        float biomeWeight = 1.0f / ((size + 1) * (size + 1));
 
         for (int i = 0; i < 2; i++)
         {
@@ -444,30 +575,41 @@ public class chunkScript : MonoBehaviour
         {
             for (int z = 0; z <= size; z++)
             {
-                if (heightMap[x, z] > waterLevel + 10)
-                {
-                    float sampleX = ((float)x + perlinOffsetX) / biomeScale;
-                    float sampleZ = ((float)z + perlinOffsetZ) / biomeScale;
+                float sampleX = ((float)x + perlinOffsetX) / biomeScale;
+                float sampleZ = ((float)z + perlinOffsetZ) / biomeScale;
 
-                    float tempNoiseVal = Adjust(tempNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
-                    float humidityNoiseVal = Adjust(humidityNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
+                float tempNoiseVal = Adjust(tempNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
+                float humidityNoiseVal = Adjust(humidityNoise.FBM_NoiseValue(sampleX, sampleZ), biomeAdjustment);
 
-                    float tempValue = tempNoiseVal * maxTemp;
-                    float humidityValue = humidityNoiseVal * maxHumidity;
+                float tempValue = tempNoiseVal * maxTemp;
+                float humidityValue = humidityNoiseVal * maxHumidity;
 
-                    Biome biome = biomeMap.getBiome(tempValue, humidityValue);
-                    biomeGrid[x, z] = biome;
-                }
-                else
-                {
-                    biomeGrid[x, z] = underWaterBiome;
-                }
-
+                Biome biome;
                 int index = x * (size + 1) + z;
                 float u = (float)x / size;
                 float v = (float)z / size;
 
-                if (heightMap[x, z] > waterLevel + 10)
+                if (heightMap[x, z] > highLandsTreshold)
+                {
+                    biome = highLandsBiomeMap.getBiome(tempValue, humidityValue);
+                }
+                else if (heightMap[x, z] > waterLevel + 10.0f)
+                {
+                    biome = biomeMap.getBiome(tempValue, humidityValue);
+                }
+                else
+                {
+                    biome = underWaterBiomeMap.getBiome(tempValue, humidityValue);
+                }
+
+                biomeGrid[x, z] = biome;
+                objectsPerChunk += biome.objectsPerChunk * biomeWeight;
+
+                if (heightMap[x, z] > highLandsTreshold)
+                {
+                    colors[index] = biome.Color;
+                }
+                else if (heightMap[x, z] > waterLevel + 10)
                 {
                     colors[index] = Color.Lerp(
                     Color.Lerp(cornerColors[0, 0], cornerColors[1, 0], u),
@@ -476,7 +618,7 @@ public class chunkScript : MonoBehaviour
                 }
                 else
                 {
-                    colors[index] = underWaterBiome.Color;
+                    colors[index] = biome.Color;
                 }
             }
         }
@@ -486,11 +628,13 @@ public class chunkScript : MonoBehaviour
     public void Start()
     {
         biomeMap = new biomeMap(maxTemp, maxHumidity, Biomes);
+        underWaterBiomeMap = new biomeMap(maxTemp, maxHumidity, underWaterBiomes);
+        highLandsBiomeMap = new biomeMap(maxTemp, maxHumidity, highlandsBiomes);
         noise = new FBM_Noise(seed, amplitude, persistence, frequency, lacunarity, octaves, sharpness);
 
-        System.Random r = new System.Random(seed);
-        int tempSeed = r.Next();
-        int humditySeed = r.Next();
+        rng = new System.Random(seed);
+        int tempSeed = rng.Next();
+        int humditySeed = rng.Next();
         tempNoise = new FBM_Noise(tempSeed, 1f, 0.5f, 2f, 3f, 4);
         humidityNoise = new FBM_Noise(humditySeed, 1f, 0.5f, 2f, 3f, 4);
 
@@ -517,5 +661,13 @@ public class chunkScript : MonoBehaviour
                 Graphics.DrawMeshInstanced(group.Value.mesh, 0, group.Value.material, group.Value.matrices.GetRange(start, count));
             }
         }
+    }
+
+    private float DeterministicHash(int seed) {
+        uint x = (uint)seed;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        return x / 4294967296.0f;
     }
 }

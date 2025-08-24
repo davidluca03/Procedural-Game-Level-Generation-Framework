@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using System.Threading;
+using Unity.VisualScripting;
 
 public class chunkGenerator : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class chunkGenerator : MonoBehaviour
     public int renderRadius = 5;
     public int chunkSize = 16;
     public float chunkScale = 1;
+    public float objectRenderDistance = 0;
 
     [Header("Noise & Perlin Settings")]
     public int seed = 0;
@@ -22,8 +24,6 @@ public class chunkGenerator : MonoBehaviour
     public float frequency = 1.0f;
     public float perlinOffsetX = 0.0f;
     public float perlinOffsetZ = 0.0f;
-    public float offsetX = 0.0f;
-    public float offsetZ = 0.0f;
     public float amplitude = 1.0f;
     public float sharpness = 1.0f;
     public float maxHeight = 1.0f;
@@ -32,7 +32,9 @@ public class chunkGenerator : MonoBehaviour
 
     [Header("Biome Settings")]
     public List<Biome> Biomes;
-    public Biome underWaterBiome;
+    public List<Biome> underWaterBiomes;
+    public List<Biome> highlandsBiomes;
+    public float highLandsTreshold = 100000.0f;
     public float biomeAdjustment = 1.0f;
     public float maxTemp = 100.0f;
     public float maxHumidity = 100.0f;
@@ -42,9 +44,6 @@ public class chunkGenerator : MonoBehaviour
 
     [Header("Material & Visuals")]
     public Material basicMaterial;
-    public bool UseBasicMaterial = true;
-    public Gradient gradient;
-    public Color planeColor = Color.darkGreen;
     public Color slopeColor = Color.dimGray;
     public float slopeBias = 0.5f;
     public float slopeSharpness = 25.0f;
@@ -52,7 +51,7 @@ public class chunkGenerator : MonoBehaviour
     [Header("Fog Settings")]
     public Color fogColor = Color.white;
     public float fogStart = 0.0f;
-    
+
     [Header("UV Settings")]
     public float UVscale = 1;
 
@@ -63,8 +62,6 @@ public class chunkGenerator : MonoBehaviour
     private Dictionary<Vector2, GameObject> waterObjects = new Dictionary<Vector2, GameObject>();
     private float previousWaterLevel = 0.0f;
     private float previousWaterUVScale = 1.0f;
-    private bool previousUseBasicMaterial = true;
-    private Color previousPlaneColor = Color.darkGreen;
     private Color previousSlopeColor = Color.dimGray;
     private float previousSlopeBias = 0.5f;
     private float previousSlopeSharpness = 25.0f;
@@ -87,9 +84,14 @@ public class chunkGenerator : MonoBehaviour
     private bool previousAbsoluteHeight = false;
     private float updateInterval = 1.0f;
     private float timer = 0.0f;
-    private Gradient previousGradient;
     private CancellationTokenSource cancellationTokenSource;
-    
+
+    public class PositionData
+    {
+        public Vector3 position;
+        public float restrictionRadius;
+    }
+
     void Start()
     {
         cancellationTokenSource = new CancellationTokenSource();
@@ -105,8 +107,6 @@ public class chunkGenerator : MonoBehaviour
         previousNoiseBias = noiseBias;
         previousSeed = seed;
         previousOctaves = octaves;
-        previousUseBasicMaterial = UseBasicMaterial;
-        previousPlaneColor = planeColor;
         previousSlopeColor = slopeColor;
         previousSlopeBias = slopeBias;
         previousSlopeSharpness = slopeSharpness;
@@ -115,53 +115,20 @@ public class chunkGenerator : MonoBehaviour
         previousWaterLevel = waterLevel;
         previousWaterUVScale = waterUVScale;
         refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
-        previousGradient = new Gradient();
-        previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
         SpawnChunks();
     }
 
-    private bool equalColors(Color color1, Color color2, float tolerance = 0.01f) {
-        return Mathf.Abs(color1.r - color2.r) < tolerance &&
-                Mathf.Abs(color1.g - color2.g) < tolerance &&
-                Mathf.Abs(color1.b - color2.b) < tolerance &&
-                Mathf.Abs(color1.a - color2.a) < tolerance;
-    }
-
-    private bool compareFloats(float a, float b, float tolerance = 0.01f) {
-        return Mathf.Abs(a - b) < tolerance;
-    }
-
-    public bool AreGradientsApproximatelyEqual(Gradient g1, Gradient g2, float tolerance = 0.001f)
+    private bool equalColors(Color color1, Color color2, float tolerance = 0.01f)
     {
-        if (g1.colorKeys.Length != g2.colorKeys.Length || g1.alphaKeys.Length != g2.alphaKeys.Length)
-        {
-            return false;
-        }
+        return Mathf.Abs(color1.r - color2.r) < tolerance &&
+               Mathf.Abs(color1.g - color2.g) < tolerance &&
+               Mathf.Abs(color1.b - color2.b) < tolerance &&
+               Mathf.Abs(color1.a - color2.a) < tolerance;
+    }
 
-        for (int i = 0; i < g1.colorKeys.Length; i++)
-        {
-            GradientColorKey key1 = g1.colorKeys[i];
-            GradientColorKey key2 = g2.colorKeys[i];
-
-            if (Mathf.Abs(key1.time - key2.time) > tolerance ||
-                !equalColors(key1.color, key2.color, tolerance))
-            {
-                return false;
-            }
-        }
-
-        for (int i = 0; i < g1.alphaKeys.Length; i++)
-        {
-            GradientAlphaKey key1 = g1.alphaKeys[i];
-            GradientAlphaKey key2 = g2.alphaKeys[i];
-            
-            if (Mathf.Abs(key1.time - key2.time) > tolerance ||
-                Mathf.Abs(key1.alpha - key2.alpha) > tolerance)
-            {
-                return false;
-            }
-        }
-        return true;
+    private bool compareFloats(float a, float b, float tolerance = 0.01f)
+    {
+        return Mathf.Abs(a - b) < tolerance;
     }
 
     private void UpdateAllChunks(Action<chunkScript> updateAction)
@@ -169,12 +136,10 @@ public class chunkGenerator : MonoBehaviour
         List<GameObject> chunksToUpdate = new List<GameObject>(chunkObjects.Values);
         foreach (var chunk in chunksToUpdate)
         {
-            // Adaugă această verificare pentru a te asigura că GameObject-ul nu este nul.
             if (chunk == null)
             {
-                continue; 
+                continue;
             }
-
             if (chunk.TryGetComponent(out chunkScript chunkComponent))
             {
                 updateAction(chunkComponent);
@@ -191,7 +156,6 @@ public class chunkGenerator : MonoBehaviour
             {
                 continue;
             }
-
             if (waterChunk.TryGetComponent(out WaterScript waterComponent))
             {
                 updateAction(waterComponent);
@@ -208,8 +172,6 @@ public class chunkGenerator : MonoBehaviour
     private void updatePerlinScale(float newPerlinScale) { UpdateAllChunks(chunk => chunk.updatePerlinScale(newPerlinScale)); }
     private void updateFogColor(Color newFogColor) { UpdateAllChunks(chunk => chunk.updateFogColor(newFogColor)); }
     private void updateFogStart(float newFogStart) { UpdateAllChunks(chunk => chunk.updateFogStart(newFogStart)); }
-    private void updateUseBasicMaterial(bool newUseBasicMaterial) { UpdateAllChunks(chunk => chunk.updateUsingBasicMaterial(newUseBasicMaterial)); }
-    private void updatePlaneColor(Color newPlaneColor) { UpdateAllChunks(chunk => chunk.updatePlaneColor(newPlaneColor)); }
     private void updateSlopeColor(Color newSlopeColor) { UpdateAllChunks(chunk => chunk.updateSlopeColor(newSlopeColor)); }
     private void updateSlopeBias(float newSlopeBias) { UpdateAllChunks(chunk => chunk.updateSlopeBias(newSlopeBias)); }
     private void updateSlopeSharpness(float newSlopeSharpness) { UpdateAllChunks(chunk => chunk.updateSlopeSharpness(newSlopeSharpness)); }
@@ -218,7 +180,6 @@ public class chunkGenerator : MonoBehaviour
     private void updateMaxHeight(float newMaxHeight) { UpdateAllChunks(chunk => chunk.updateMaxHeight(newMaxHeight)); }
     private void updateNoiseBias(float newNoiseBias) { UpdateAllChunks(chunk => chunk.updateNoiseBias(newNoiseBias)); }
     private void updateAbsoluteHeight(bool newAbsoluteHeight) { UpdateAllChunks(chunk => chunk.updateAbsoluteHeight(newAbsoluteHeight)); }
-    private void updateGradient(Gradient newGradient) { UpdateAllChunks(chunk => chunk.updateGradient(newGradient)); }
     private void updateWaterLevel(float newWaterLevel) { UpdateAllWaterChunks(waterChunk => waterChunk.updateWaterLevel(newWaterLevel)); }
     private void updateWaterUVScale(float newWaterUVScale) { UpdateAllWaterChunks(waterChunk => waterChunk.waterUVScale = newWaterUVScale); }
 
@@ -263,16 +224,6 @@ public class chunkGenerator : MonoBehaviour
         {
             updateFogStart(fogStart);
             previousFogStart = fogStart;
-        }
-        if (previousUseBasicMaterial != UseBasicMaterial)
-        {
-            updateUseBasicMaterial(UseBasicMaterial);
-            previousUseBasicMaterial = UseBasicMaterial;
-        }
-        if (!equalColors(previousPlaneColor, planeColor))
-        {
-            updatePlaneColor(planeColor);
-            previousPlaneColor = planeColor;
         }
         if (!equalColors(previousSlopeColor, slopeColor))
         {
@@ -319,11 +270,7 @@ public class chunkGenerator : MonoBehaviour
             updateAbsoluteHeight(absoluteHeight);
             previousAbsoluteHeight = absoluteHeight;
         }
-        if (!AreGradientsApproximatelyEqual(gradient, previousGradient))
-        {
-            updateGradient(gradient);
-            previousGradient.SetKeys(gradient.colorKeys, gradient.alphaKeys);
-        }
+
         if (!compareFloats(previousWaterLevel, waterLevel))
         {
             updateWaterLevel(waterLevel);
@@ -356,15 +303,23 @@ public class chunkGenerator : MonoBehaviour
             {
                 chunksToRemove.Add(chunkCoord);
             }
+            else if (Mathf.Abs(chunkCoord.x - refferencePosition.x) > objectRenderDistance ||
+                Mathf.Abs(chunkCoord.y - refferencePosition.z) > objectRenderDistance)
+            {
+                chunkObjects[chunkCoord].GetComponent<chunkScript>().removeObjects();
+            }
+            else
+            {
+                chunkObjects[chunkCoord].GetComponent<chunkScript>().addObjects();
+            }
         }
-        
-        // ANULEAZĂ TOATE SARCINILE CURENTE ÎNAINTE DE A LE DISTRUGE
+
         if (chunksToRemove.Count > 0)
         {
             cancellationTokenSource.Cancel();
             cancellationTokenSource = new CancellationTokenSource();
         }
-        
+
         foreach (var chunkCoord in chunksToRemove)
         {
             if (chunkObjects.TryGetValue(chunkCoord, out GameObject chunkObject))
@@ -381,93 +336,98 @@ public class chunkGenerator : MonoBehaviour
         }
     }
 
-    private async void SpawnChunks()
+    private void SpawnChunks()
+{
+    for (int i = Mathf.FloorToInt(refferencePosition.x) - renderRadius; 
+         i <= Mathf.FloorToInt(refferencePosition.x) + renderRadius; i++)
     {
-        List<Task> spawnTasks = new List<Task>();
-
-        for (float i = Mathf.Ceil(refferencePosition.x) - renderRadius; i <= Mathf.Ceil(refferencePosition.x) + renderRadius; i++)
+        for (int j = Mathf.FloorToInt(refferencePosition.z) - renderRadius; 
+             j <= Mathf.FloorToInt(refferencePosition.z) + renderRadius; j++)
         {
-            for (float j = Mathf.Ceil(refferencePosition.z) - renderRadius; j <= Mathf.Ceil(refferencePosition.z) + renderRadius; j++)
+            Vector2 chunkCoord = new Vector2(i, j);
+
+            if (!generatedChunks.Contains(chunkCoord))
             {
-                Vector2 chunkCoord = new Vector2(i, j);
+                generatedChunks.Add(chunkCoord);
 
-                if (!generatedChunks.Contains(chunkCoord))
+                Vector3 chunkPosition = new Vector3(
+                    i * chunkSize * chunkScale,
+                    0,
+                    j * chunkSize * chunkScale
+                );
+
+                GameObject chunkObject = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity);
+                chunkScript chunk = chunkObject.GetComponent<chunkScript>();
+
+                if (chunk != null)
                 {
-                    generatedChunks.Add(chunkCoord);
-                    Vector3 chunkPosition = new Vector3(i * chunkSize * chunkScale, 0, j * chunkSize * chunkScale);
-                    
-                    GameObject chunkObject = Instantiate(chunkPrefab, chunkPosition, Quaternion.identity);
-                    chunkScript chunk = chunkObject.GetComponent<chunkScript>();
+                    chunkObjects[chunkCoord] = chunkObject;
+                    chunkObject.isStatic = true;
 
-                    if (chunk != null)
+                    chunk.chunkSize = chunkSize;
+                    chunk.chunkScale = chunkScale;
+                    chunk.UVscale = UVscale;
+                    chunk.perlinScale = perlinScale;
+                    chunk.seed = seed;
+                    chunk.Biomes = Biomes;
+                    chunk.underWaterBiomes = underWaterBiomes;
+                    chunk.highlandsBiomes = highlandsBiomes;
+                    chunk.highLandsTreshold = highLandsTreshold;
+                    chunk.biomeAdjustment = biomeAdjustment;
+                    chunk.biomeColorBlend = biomeColorBlend;
+                    chunk.blendSampleDistance = blendSampleDistance;
+                    chunk.maxTemp = maxTemp;
+                    chunk.maxHumidity = maxHumidity;
+                    chunk.biomeScale = biomeScale;
+                    chunk.octaves = octaves;
+                    chunk.persistence = persistence;
+                    chunk.lacunarity = lacunarity;
+                    chunk.frequency = frequency;
+                    chunk.perlinOffsetX = perlinOffsetX + i * chunkSize;
+                    chunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
+                    chunk.offsetX = chunkCoord.x;
+                    chunk.offsetZ = chunkCoord.y;
+                    chunk.amplitude = amplitude;
+                    chunk.basicMaterial = basicMaterial;
+                    chunk.slopeColor = slopeColor;
+                    chunk.slopeBias = slopeBias;
+                    chunk.slopeSharpness = slopeSharpness;
+                    chunk.fogColor = fogColor;
+                    chunk.fogStart = fogStart;
+                    chunk.sharpness = sharpness;
+                    chunk.maxHeight = maxHeight;
+                    chunk.noiseBias = noiseBias;
+                    chunk.absoluteHeight = absoluteHeight;
+                    chunk.waterLevel = waterLevel;
+
+                    _ = chunk.UpdateMeshAsync(cancellationTokenSource.Token);
+                }
+
+                if (waterPrefab != null)
+                {
+                    GameObject waterObject = Instantiate(waterPrefab, chunkPosition, Quaternion.identity);
+                    WaterScript waterChunk = waterObject.GetComponent<WaterScript>();
+                    if (waterChunk != null)
                     {
-                        chunkObjects[chunkCoord] = chunkObject;
-                        chunk.chunkSize = chunkSize;
-                        chunk.chunkScale = chunkScale;
-                        chunk.UVscale = UVscale;
-                        chunk.perlinScale = perlinScale;
-                        chunk.seed = seed;
-                        chunk.Biomes = Biomes;
-                        chunk.biomeAdjustment = biomeAdjustment;
-                        chunk.biomeColorBlend = biomeColorBlend;
-                        chunk.blendSampleDistance = blendSampleDistance;
-                        chunk.maxTemp = maxTemp;
-                        chunk.maxHumidity = maxHumidity;
-                        chunk.biomeScale = biomeScale;
-                        chunk.underWaterBiome = underWaterBiome;
-                        chunk.octaves = octaves;
-                        chunk.persistence = persistence;
-                        chunk.lacunarity = lacunarity;
-                        chunk.frequency = frequency;
-                        chunk.perlinOffsetX = perlinOffsetX + i * chunkSize;
-                        chunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
-                        chunk.offsetX = offsetX + i * chunkSize * chunkScale;
-                        chunk.offsetZ = offsetZ + j * chunkSize * chunkScale;
-                        chunk.gradient = gradient;
-                        chunk.amplitude = amplitude;
-                        chunk.basicMaterial = basicMaterial;
-                        chunk.UseBasicMaterial = UseBasicMaterial;
-                        chunk.planeColor = planeColor;
-                        chunk.slopeColor = slopeColor;
-                        chunk.slopeBias = slopeBias;
-                        chunk.slopeSharpness = slopeSharpness;
-                        chunk.fogColor = fogColor;
-                        chunk.fogStart = fogStart;
-                        chunk.sharpness = sharpness;
-                        chunk.maxHeight = maxHeight;
-                        chunk.noiseBias = noiseBias;
-                        chunk.absoluteHeight = absoluteHeight;
-                        chunk.waterLevel = waterLevel;
-                        spawnTasks.Add(chunk.UpdateMeshAsync(cancellationTokenSource.Token));
-                    }
-                    
-                    if (waterPrefab != null)
-                    {
-                        GameObject waterObject = Instantiate(waterPrefab, chunkPosition, Quaternion.identity);
-                        WaterScript waterChunk = waterObject.GetComponent<WaterScript>();
-                        
-                        if (waterChunk != null)
-                        {
-                            waterObjects[chunkCoord] = waterObject;
-                            waterChunk.chunkSize = chunkSize;
-                            waterChunk.chunkScale = chunkScale;
-                            waterChunk.waterLevel = waterLevel;
-                            waterChunk.waterUVScale = waterUVScale;
-                            waterChunk.perlinOffsetX = perlinOffsetX + i * chunkSize;
-                            waterChunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
-                        }
+                        waterObjects[chunkCoord] = waterObject;
+                        waterChunk.chunkSize = chunkSize;
+                        waterChunk.chunkScale = chunkScale;
+                        waterChunk.waterLevel = waterLevel;
+                        waterChunk.waterUVScale = waterUVScale;
+                        waterChunk.perlinOffsetX = perlinOffsetX + i * chunkSize;
+                        waterChunk.perlinOffsetZ = perlinOffsetZ + j * chunkSize;
                     }
                 }
             }
         }
-        await Task.WhenAll(spawnTasks);
     }
+}
 
     void OnDisable()
     {
         cancellationTokenSource.Cancel();
     }
-    
+
     void Update()
     {
         refferencePosition = refferenceObject.transform.position / chunkScale / chunkSize;
@@ -476,3 +436,6 @@ public class chunkGenerator : MonoBehaviour
         despawnChunks();
     }
 }
+
+
+

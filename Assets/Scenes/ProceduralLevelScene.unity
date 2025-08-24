@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: -876546973899608171, guid: e7a3ac3721292e2438b604b7e1224875, type: 3}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -214,6 +214,10 @@ MonoBehaviour:
     minHumidity: 0
     maxHumidity: 100
     objects: []
+    objectsPerChunk: 40
+  underWaterBiomes: []
+  highlandsBiomes: []
+  highLandsTreshold: 100000
   chunkSize: 24
   chunkScale: 1.43
   UVscale: 1
@@ -232,38 +236,6 @@ MonoBehaviour:
   noiseBias: 0
   absoluteHeight: 0
   basicMaterial: {fileID: 0}
-  UseBasicMaterial: 1
-  gradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
   slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
   slopeBias: 0.5
   slopeSharpness: 25
@@ -278,6 +250,8 @@ MonoBehaviour:
     minHumidity: 0
     maxHumidity: 0
     objects: []
+    objectsPerChunk: 40
+  objectRenderDistance: 0
 --- !u!4 &715412231
 Transform:
   m_ObjectHideFlags: 0
@@ -293,6 +267,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &841483644
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -5.803205
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 10.553888
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1865644652532345115, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7682635029217797407, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      propertyPath: m_Name
+      value: ruin_sword
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
 --- !u!1 &853165940
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,7 +382,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 1
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -445,11 +476,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 715412229}
   refferenceObject: {fileID: 1559403397}
-  renderRadius: 10
-  chunkSize: 64
-  chunkScale: 0.5
+  renderRadius: 5
+  chunkSize: 80
+  chunkScale: 4
+  objectRenderDistance: 4
   seed: 0
-  perlinScale: 80
+  perlinScale: 25
   octaves: 8
   persistence: 0.3
   lacunarity: 2.8
@@ -458,46 +490,357 @@ MonoBehaviour:
   perlinOffsetZ: 0
   offsetX: 0
   offsetZ: 0
-  amplitude: 357.9999
+  amplitude: 2000
   sharpness: 3
   maxHeight: 1
   noiseBias: 0
   absoluteHeight: 0
   Biomes:
-  - name: 
+  - name: Plains
     Color: {r: 0.1241545, g: 0.2830189, b: 0.1241545, a: 0}
+    minTemp: 0
+    maxTemp: 50
+    minHumidity: 50
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 191266, guid: 28c74e72b688e7e4699c95a075ef37e6, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 5
+      maxScale: 6
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 2
+      heightCondition: 0
+      minHeight: -10000
+      maxHeight: 100000
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 1
+      spawnChance: 0.25
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.85
+      noiseHardTreshold: 0.45
+      noiseScale: 300
+      invertNoise: 1
+      ignoreCollisions: 0
+    - obj: {fileID: 8472507323910250242, guid: d30c4b4bd6a5caa429fa27ca44e567ff, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 1
+      maxScale: 1
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 50
+      heightCondition: 0
+      minHeight: -250
+      maxHeight: -200
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 1
+      spawnChance: 0.00015
+      noiseTresholdCondition: 0
+      noiseSoftTreshold: 0.00002
+      noiseHardTreshold: 0.45
+      noiseScale: 300
+      invertNoise: 1
+      ignoreCollisions: 0
+    - obj: {fileID: 7521621896990144009, guid: d2d684aece92207479fd201adf20c146, type: 3}
+      seedOffset: 5
+      positionOffset: 0
+      minScale: 6
+      maxScale: 7
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 0.1
+      heightCondition: 0
+      minHeight: -250
+      maxHeight: -200
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 30
+      randomSpawn: 0
+      spawnChance: 0.05
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.61
+      noiseHardTreshold: 0.58
+      noiseScale: 50
+      invertNoise: 0
+      ignoreCollisions: 1
+    objectsPerChunk: 400
+  - name: Taiga
+    Color: {r: 0.007164475, g: 0.21698111, b: 0.13795301, a: 0}
     minTemp: 0
     maxTemp: 100
     minHumidity: 0
     maxHumidity: 50
     objects:
-    - obj: {fileID: 191266, guid: c44bd9bdc114d4a60932c0087d9d1732, type: 3}
+    - obj: {fileID: 192044, guid: 8642625ec6dc2514ab8fbba9fc631d73, type: 3}
       seedOffset: 0
-      minScale: 2
-      maxScale: 2.5
+      positionOffset: 0
+      minScale: 8
+      maxScale: 12
       minRotation: 0
       maxRotation: 360
-      minDistance: 6
+      minDistance: 12
+      heightCondition: 0
+      minHeight: -10000
+      maxHeight: 100000
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 35
+      randomSpawn: 1
+      spawnChance: 0.17
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.63
+      noiseHardTreshold: 0.24
+      noiseScale: 80
+      invertNoise: 0
+      ignoreCollisions: 0
+    - obj: {fileID: 7906229388313545571, guid: 53bb14d272142ac4b99ef07c352e0267, type: 3}
+      seedOffset: 1
+      positionOffset: 0
+      minScale: 8
+      maxScale: 12
+      minRotation: 0
+      maxRotation: 45
+      minDistance: 70
+      heightCondition: 0
+      minHeight: -10000
+      maxHeight: 100000
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 10
+      randomSpawn: 1
+      spawnChance: 0.4
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.72
+      noiseHardTreshold: 0.33
+      noiseScale: 80
+      invertNoise: 0
+      ignoreCollisions: 0
+    - obj: {fileID: 8114600924028484287, guid: ca48df75d435b0c47a89d096f2411709, type: 3}
+      seedOffset: 3
+      positionOffset: 0
+      minScale: 15
+      maxScale: 25
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 2
+      heightCondition: 0
+      minHeight: -10000
+      maxHeight: 100000
+      heightBlendSize: 15
+      maxSlopeCondition: 1
+      maxSlopeAngle: 25
+      randomSpawn: 1
+      spawnChance: 0.26
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.61
+      noiseHardTreshold: 0.32
+      noiseScale: 320
+      invertNoise: 0
+      ignoreCollisions: 0
+    objectsPerChunk: 40
+  - name: Desert
+    Color: {r: 0.4811321, g: 0.31800076, b: 0.03404236, a: 0}
+    minTemp: 0
+    maxTemp: 100
+    minHumidity: 50
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 2093249872792338959, guid: c87de61d08a278242b17993b24c9898a, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 30
+      maxScale: 70
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 17
       heightCondition: 0
       minHeight: 0
       maxHeight: 0
       heightBlendSize: 0
       maxSlopeCondition: 1
-      maxSlopeAngle: 30
-      randomSpawn: 1
-      spawnChance: 0.15
+      maxSlopeAngle: 25
+      randomSpawn: 0
+      spawnChance: 0
       noiseTresholdCondition: 1
-      noiseSoftTreshold: 0.7
-      noiseHardTreshold: 0.27
-      noiseScale: 300
+      noiseSoftTreshold: 0.75
+      noiseHardTreshold: 0.54
+      noiseScale: 90
       invertNoise: 0
-  - name: 
-    Color: {r: 0.3679245, g: 0.25985494, b: 0.13363294, a: 0}
+      ignoreCollisions: 0
+    objectsPerChunk: 0
+  - name: Jungle
+    Color: {r: 0.07928269, g: 0.103773594, b: 0.036712356, a: 0}
     minTemp: 0
     maxTemp: 100
     minHumidity: 50
     maxHumidity: 100
     objects: []
+    objectsPerChunk: 0
+  underWaterBiomes:
+  - name: 
+    Color: {r: 0.6792453, g: 0.640726, b: 0.34282663, a: 1}
+    minTemp: 0
+    maxTemp: 100
+    minHumidity: 0
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 919132149155446097, guid: 8d3e133b3a540004cabe8c050a0e4f9a, type: 3}
+      seedOffset: 4
+      positionOffset: 5
+      minScale: 14.55
+      maxScale: 33.4
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 1
+      heightCondition: 1
+      minHeight: -1000
+      maxHeight: 80
+      heightBlendSize: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 0
+      randomSpawn: 1
+      spawnChance: 0.15
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.7
+      noiseHardTreshold: 0.51
+      noiseScale: 160
+      invertNoise: 1
+      ignoreCollisions: 0
+    - obj: {fileID: 919132149155446097, guid: 6cd367109ae24ba43bbc16a4a3e8bfea, type: 3}
+      seedOffset: 0
+      positionOffset: 5
+      minScale: 8
+      maxScale: 24
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 1
+      heightCondition: 1
+      minHeight: -1000
+      maxHeight: 85
+      heightBlendSize: 10
+      maxSlopeCondition: 0
+      maxSlopeAngle: 0
+      randomSpawn: 1
+      spawnChance: 0.08
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.59
+      noiseHardTreshold: 0.32
+      noiseScale: 160
+      invertNoise: 1
+      ignoreCollisions: 0
+    - obj: {fileID: 4909404413231245231, guid: dfd61d436a3d8624e9481b1fc82eba71, type: 3}
+      seedOffset: 2
+      positionOffset: 0
+      minScale: 2
+      maxScale: 4
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 0.02
+      heightCondition: 1
+      minHeight: -1000
+      maxHeight: 100
+      heightBlendSize: 40
+      maxSlopeCondition: 0
+      maxSlopeAngle: 0
+      randomSpawn: 0
+      spawnChance: 0.8
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.4
+      noiseHardTreshold: 0.3
+      noiseScale: 200
+      invertNoise: 0
+      ignoreCollisions: 0
+    objectsPerChunk: 4000
+  highlandsBiomes:
+  - name: Snowy Mountains
+    Color: {r: 1, g: 1, b: 1, a: 0}
+    minTemp: 0
+    maxTemp: 50
+    minHumidity: 0
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 7682635029217797407, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 3
+      maxScale: 15
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 7
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      heightBlendSize: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 15
+      randomSpawn: 1
+      spawnChance: 0.9
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.65
+      noiseHardTreshold: 0.32
+      noiseScale: 0
+      invertNoise: 0
+      ignoreCollisions: 0
+    - obj: {fileID: 7682635029217797407, guid: 49a4926d7d5025e48ac8c3579633d115, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 3
+      maxScale: 15
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 7
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      heightBlendSize: 0
+      maxSlopeCondition: 1
+      maxSlopeAngle: 15
+      randomSpawn: 1
+      spawnChance: 0.9
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.65
+      noiseHardTreshold: 0.32
+      noiseScale: 0
+      invertNoise: 0
+      ignoreCollisions: 0
+    objectsPerChunk: 30
+  - name: Mountains
+    Color: {r: 0.11320752, g: 0.11320752, b: 0.11320752, a: 0}
+    minTemp: 50
+    maxTemp: 100
+    minHumidity: 0
+    maxHumidity: 100
+    objects:
+    - obj: {fileID: 3642226890507477491, guid: 266dcb4276f133046b2da4ef6d461d5a, type: 3}
+      seedOffset: 0
+      positionOffset: 0
+      minScale: 10
+      maxScale: 22
+      minRotation: 0
+      maxRotation: 360
+      minDistance: 3
+      heightCondition: 0
+      minHeight: 0
+      maxHeight: 0
+      heightBlendSize: 0
+      maxSlopeCondition: 0
+      maxSlopeAngle: 0
+      randomSpawn: 1
+      spawnChance: 0.2
+      noiseTresholdCondition: 1
+      noiseSoftTreshold: 0.7
+      noiseHardTreshold: 0.4
+      noiseScale: 62.65
+      invertNoise: 0
+      ignoreCollisions: 0
+    objectsPerChunk: 51
+  highLandsTreshold: 355
   underWaterBiome:
     name: 
     Color: {r: 0.6792453, g: 0.640726, b: 0.34282663, a: 1}
@@ -507,27 +850,30 @@ MonoBehaviour:
     maxHumidity: 0
     objects:
     - obj: {fileID: 919132149155446097, guid: 8d3e133b3a540004cabe8c050a0e4f9a, type: 3}
-      seedOffset: 0
-      minScale: 5
-      maxScale: 18
+      seedOffset: 4
+      positionOffset: 5
+      minScale: 14.55
+      maxScale: 33.4
       minRotation: 0
       maxRotation: 360
       minDistance: 1
       heightCondition: 1
       minHeight: -1000
-      maxHeight: -330
+      maxHeight: 80
       heightBlendSize: 0
       maxSlopeCondition: 0
       maxSlopeAngle: 0
       randomSpawn: 1
-      spawnChance: 0.003
+      spawnChance: 0.15
       noiseTresholdCondition: 1
       noiseSoftTreshold: 0.7
-      noiseHardTreshold: 0.55
+      noiseHardTreshold: 0.51
       noiseScale: 160
       invertNoise: 1
+      ignoreCollisions: 0
     - obj: {fileID: 919132149155446097, guid: 6cd367109ae24ba43bbc16a4a3e8bfea, type: 3}
-      seedOffset: 1
+      seedOffset: 0
+      positionOffset: 5
       minScale: 8
       maxScale: 24
       minRotation: 0
@@ -535,84 +881,56 @@ MonoBehaviour:
       minDistance: 1
       heightCondition: 1
       minHeight: -1000
-      maxHeight: -325
+      maxHeight: 85
       heightBlendSize: 10
       maxSlopeCondition: 0
       maxSlopeAngle: 0
       randomSpawn: 1
-      spawnChance: 0.003
+      spawnChance: 0.08
       noiseTresholdCondition: 1
-      noiseSoftTreshold: 0.6
-      noiseHardTreshold: 0.4
+      noiseSoftTreshold: 0.59
+      noiseHardTreshold: 0.32
       noiseScale: 160
       invertNoise: 1
+      ignoreCollisions: 0
     - obj: {fileID: 4909404413231245231, guid: dfd61d436a3d8624e9481b1fc82eba71, type: 3}
       seedOffset: 2
+      positionOffset: 0
       minScale: 2
       maxScale: 4
       minRotation: 0
       maxRotation: 360
-      minDistance: 1
+      minDistance: 0.02
       heightCondition: 1
       minHeight: -1000
-      maxHeight: -325
+      maxHeight: 100
       heightBlendSize: 40
       maxSlopeCondition: 0
       maxSlopeAngle: 0
-      randomSpawn: 1
-      spawnChance: 0.12
+      randomSpawn: 0
+      spawnChance: 0.8
       noiseTresholdCondition: 1
       noiseSoftTreshold: 0.4
       noiseHardTreshold: 0.3
       noiseScale: 200
       invertNoise: 0
+      ignoreCollisions: 0
+    objectsPerChunk: 4000
   biomeAdjustment: 1
   maxTemp: 100
   maxHumidity: 100
   biomeScale: 9000.57
-  biomeColorBlend: 5
+  biomeColorBlend: 1
   blendSampleDistance: 1
   basicMaterial: {fileID: -876546973899608171, guid: 39036748944d9e249b5d8008938b357b, type: 3}
-  UseBasicMaterial: 1
-  gradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 0
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: -1
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  planeColor: {r: 0, g: 0.3921569, b: 0, a: 1}
   slopeColor: {r: 0.4117647, g: 0.4117647, b: 0.4117647, a: 1}
   slopeBias: 0.1
   slopeSharpness: 25
-  fogColor: {r: 1, g: 1, b: 1, a: 1}
-  fogStart: 0
+  fogColor: {r: 0.5019608, g: 0.7372549, b: 0.7075472, a: 1}
+  fogStart: 0.1
   UVscale: 1
   waterPrefab: {fileID: 548720953}
-  waterLevel: -300
+  waterLevel: 115
   waterUVScale: 1
 --- !u!4 &1003721511
 Transform:
@@ -623,7 +941,56 @@ Transform:
   m_GameObject: {fileID: 1003721509}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.82275, y: 0, z: -10.03589}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1259294706
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1259294708}
+  - component: {fileID: 1259294707}
+  m_Layer: 0
+  m_Name: Global Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1259294707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259294706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: fcc5570a3ecdba24da06fe3dac841f49, type: 2}
+--- !u!4 &1259294708
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259294706}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -23.44741, y: 0, z: -16.28996}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -662,7 +1029,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08be4f45a299c5e4ebada58fc6739984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 20
+  speed: 50
   sensitivity: 2
   moveAction: {fileID: -2118479198369057049, guid: fc690187eb02d6b40a861564d16a8136, type: 3}
   lookAction: {fileID: -724922893281031978, guid: fc690187eb02d6b40a861564d16a8136, type: 3}
@@ -720,7 +1087,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -781,7 +1148,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 1300
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -815,6 +1182,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &664395028219321577
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 919.83887
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2113.7002
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 558707354305462885, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4500055380856702308, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
+      propertyPath: m_Name
+      value: grass
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5f4f9c2c1aac3174fb757abbbcd2283e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -824,3 +1248,6 @@ SceneRoots:
   - {fileID: 715412231}
   - {fileID: 1003721511}
   - {fileID: 548720955}
+  - {fileID: 1259294708}
+  - {fileID: 664395028219321577}
+  - {fileID: 841483644}
